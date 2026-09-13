@@ -1,0 +1,29 @@
+solana_lakehouse:
+  target: dev
+  outputs:
+    dev:
+      type: spark
+      method: thrift
+      schema: solana
+      host: "{{ env_var('THRIFT_HOST') }}"
+      port: 10000
+      connect_timeout: 60
+      connect_retries: 3
+      threads: 4
+    serverless:
+      type: spark
+      method: session
+      host: local
+      schema: solana
+      threads: 4
+      config:
+        spark.sql.warehouse.dir: gs://our-solana-lake-prod/warehouse
+        spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+        spark.sql.catalog.spark_catalog: org.apache.iceberg.spark.SparkCatalog
+        spark.sql.catalog.spark_catalog.type: hadoop
+        spark.sql.catalog.spark_catalog.warehouse: gs://our-solana-lake-prod/warehouse
+        spark.sql.catalog.spark_catalog.io-impl: org.apache.iceberg.hadoop.HadoopFileIO
+        spark.sql.catalog.iceberg: org.apache.iceberg.spark.SparkCatalog
+        spark.sql.catalog.iceberg.type: hadoop
+        spark.sql.catalog.iceberg.warehouse: gs://our-solana-lake-prod/warehouse
+        spark.sql.catalog.iceberg.io-impl: org.apache.iceberg.hadoop.HadoopFileIO

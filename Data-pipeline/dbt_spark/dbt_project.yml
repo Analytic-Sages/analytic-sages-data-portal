@@ -1,0 +1,27 @@
+name: 'solana_lakehouse'
+version: '1.0.0'
+config-version: 2
+profile: 'solana_lakehouse'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+on-run-start:
+  - "CREATE SCHEMA IF NOT EXISTS {{ target.schema }}_staging"
+  - "CREATE SCHEMA IF NOT EXISTS {{ target.schema }}_marts"
+
+models:
+  solana_lakehouse:
+    +file_format: iceberg
+    staging:
+      +materialized: ephemeral
+    marts:
+      +materialized: table
+      +schema: marts

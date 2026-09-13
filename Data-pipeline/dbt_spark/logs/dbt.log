@@ -1,0 +1,351 @@
+[0m15:40:39.965460 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e0bbee8a3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e0bc1344f50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e0bbdaa3c50>]}
+
+
+============================== 15:40:39.970673 | 10d180b5-201d-4038-8230-3ac2422e3091 ==============================
+[0m15:40:39.970673 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:40:39.971972 [debug] [MainThread]: running dbt with arguments {'indirect_selection': 'eager', 'hints_enabled': 'True', 'fail_fast': 'False', 'use_experimental_parser': 'False', 'partial_parse': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'debug': 'False', 'printer_width': '80', 'empty': 'None', 'use_colors': 'True', 'write_json': 'True', 'cache_selected_only': 'False', 'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2', 'introspect': 'True', 'log_format': 'default', 'quiet': 'False', 'target_path': 'None', 'profiles_dir': 'dbt_spark_v2', 'version_check': 'True', 'send_anonymous_usage_stats': 'True', 'log_cache_events': 'False', 'warn_error': 'None', 'static_parser': 'True', 'no_print': 'None', 'log_path': 'dbt_spark_v2/logs', 'maximum_seed_size_mib': '1'}
+[0m15:40:40.033690 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:40:40.034904 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:40:40.036181 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:40:40.093246 [error] [MainThread]: [[31mERROR[0m]: Encountered an error:
+Runtime Error
+  Credentials in profile "solana_lakehouse", target "dev" invalid: Runtime Error
+    thrift connection method requires additional dependencies. 
+    Install the additional required dependencies with `pip install dbt-spark[PyHive]`
+[0m15:40:40.095057 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": false, "command_wall_clock_time": 0.26022044, "process_in_blocks": "0", "process_kernel_time": 0.341198, "process_mem_max_rss": "114644", "process_out_blocks": "16", "process_user_time": 1.962892}
+[0m15:40:40.095854 [debug] [MainThread]: Command `dbt parse` failed at 15:40:40.095732 after 0.26 seconds
+[0m15:40:40.096428 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e0bbd5515b0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e0bbd812d50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e0bbd9cff00>]}
+[0m15:40:40.097009 [debug] [MainThread]: Flushing usage events
+[0m15:40:41.551751 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m15:41:16.987233 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff4d7a3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff6f8cf50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff398fc50>]}
+
+
+============================== 15:41:16.991416 | d0b79711-6e5a-42d2-a543-471a1dee35a8 ==============================
+[0m15:41:16.991416 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:41:16.992240 [debug] [MainThread]: running dbt with arguments {'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2', 'introspect': 'True', 'static_parser': 'True', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'maximum_seed_size_mib': '1', 'quiet': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'empty': 'None', 'write_json': 'True', 'printer_width': '80', 'use_experimental_parser': 'False', 'use_colors': 'True', 'version_check': 'True', 'log_cache_events': 'False', 'debug': 'False', 'profiles_dir': 'dbt_spark_v2', 'indirect_selection': 'eager', 'no_print': 'None', 'log_format': 'default', 'log_path': 'dbt_spark_v2/logs', 'fail_fast': 'False', 'cache_selected_only': 'False', 'target_path': 'None', 'hints_enabled': 'True', 'warn_error': 'None'}
+[0m15:41:17.233476 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:41:17.234238 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:41:17.234784 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:41:17.504054 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'd0b79711-6e5a-42d2-a543-471a1dee35a8', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff4ab9f30>]}
+[0m15:41:17.705118 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'd0b79711-6e5a-42d2-a543-471a1dee35a8', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff3bd38a0>]}
+[0m15:41:17.706180 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m15:41:17.814755 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m15:41:17.815739 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m15:41:17.816342 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'd0b79711-6e5a-42d2-a543-471a1dee35a8', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff3268850>]}
+[0m15:41:19.118407 [error] [MainThread]: [[31mERROR[0m]: Encountered an error:
+Runtime Error
+  Cannot set database in spark!
+[0m15:41:19.119677 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": false, "command_wall_clock_time": 2.2669427, "process_in_blocks": "1384", "process_kernel_time": 0.433216, "process_mem_max_rss": "135444", "process_out_blocks": "1744", "process_user_time": 4.046}
+[0m15:41:19.124015 [debug] [MainThread]: Command `dbt parse` failed at 15:41:19.123771 after 2.27 seconds
+[0m15:41:19.124807 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff2e4c500>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff2e4f4d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x745ff3997e70>]}
+[0m15:41:19.125703 [debug] [MainThread]: Flushing usage events
+[0m15:41:20.135720 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m15:41:38.478384 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a796e3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a9b9cf50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a6583c50>]}
+
+
+============================== 15:41:38.484439 | ad23945f-7124-4319-8dc4-f148163ab7ae ==============================
+[0m15:41:38.484439 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:41:38.485331 [debug] [MainThread]: running dbt with arguments {'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'no_print': 'None', 'cache_selected_only': 'False', 'use_experimental_parser': 'False', 'printer_width': '80', 'target_path': 'None', 'debug': 'False', 'warn_error': 'None', 'profiles_dir': 'dbt_spark_v2', 'version_check': 'True', 'empty': 'None', 'log_path': 'dbt_spark_v2/logs', 'write_json': 'True', 'hints_enabled': 'True', 'introspect': 'True', 'log_cache_events': 'False', 'use_colors': 'True', 'static_parser': 'True', 'log_format': 'default', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'maximum_seed_size_mib': '1', 'indirect_selection': 'eager', 'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2', 'quiet': 'False', 'fail_fast': 'False'}
+[0m15:41:38.550008 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:41:38.550624 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:41:38.551175 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:41:38.881293 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'ad23945f-7124-4319-8dc4-f148163ab7ae', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a76adf30>]}
+[0m15:41:38.982669 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'ad23945f-7124-4319-8dc4-f148163ab7ae', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a600f680>]}
+[0m15:41:38.983724 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m15:41:39.093677 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m15:41:39.094579 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m15:41:39.095273 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'ad23945f-7124-4319-8dc4-f148163ab7ae', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a6079050>]}
+[0m15:41:40.351715 [error] [MainThread]: [[31mERROR[0m]: Encountered an error:
+Runtime Error
+  Cannot set database in spark!
+[0m15:41:40.353127 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": false, "command_wall_clock_time": 2.0096622, "process_in_blocks": "0", "process_kernel_time": 0.400384, "process_mem_max_rss": "131212", "process_out_blocks": "16", "process_user_time": 3.829422}
+[0m15:41:40.353895 [debug] [MainThread]: Command `dbt parse` failed at 15:41:40.353743 after 2.01 seconds
+[0m15:41:40.354425 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a5a355e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a5a354f0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70d9a658be70>]}
+[0m15:41:40.355089 [debug] [MainThread]: Flushing usage events
+[0m15:41:41.407628 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m15:41:45.095072 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559f98e3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559e453ed0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559e453b10>]}
+
+
+============================== 15:41:45.100873 | 960bf940-bd7a-4956-92a0-f87655e7f81c ==============================
+[0m15:41:45.100873 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:41:45.101895 [debug] [MainThread]: running dbt with arguments {'debug': 'False', 'write_json': 'True', 'version_check': 'True', 'partial_parse': 'True', 'printer_width': '80', 'profiles_dir': 'dbt_spark_v2', 'introspect': 'True', 'warn_error': 'None', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'send_anonymous_usage_stats': 'True', 'log_path': 'dbt_spark_v2/logs', 'static_parser': 'True', 'log_cache_events': 'False', 'cache_selected_only': 'False', 'empty': 'False', 'target_path': 'None', 'hints_enabled': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'quiet': 'False', 'fail_fast': 'False', 'no_print': 'None', 'log_format': 'default', 'maximum_seed_size_mib': '1', 'use_colors': 'True', 'invocation_command': 'dbt compile --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2 --select stg_token_transfers'}
+[0m15:41:45.194434 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:41:45.195123 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:41:45.195624 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:41:45.530138 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '960bf940-bd7a-4956-92a0-f87655e7f81c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559f6c5f30>]}
+[0m15:41:45.643486 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '960bf940-bd7a-4956-92a0-f87655e7f81c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559e5ed6a0>]}
+[0m15:41:45.644595 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m15:41:45.732643 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m15:41:45.733522 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m15:41:45.734103 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': '960bf940-bd7a-4956-92a0-f87655e7f81c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559e392c50>]}
+[0m15:41:47.000214 [error] [MainThread]: [[31mERROR[0m]: Encountered an error:
+Runtime Error
+  Cannot set database in spark!
+[0m15:41:47.001868 [debug] [MainThread]: Resource report: {"command_name": "compile", "command_success": false, "command_wall_clock_time": 2.6319044, "process_in_blocks": "496", "process_kernel_time": 0.338105, "process_mem_max_rss": "132052", "process_out_blocks": "8", "process_user_time": 3.82656}
+[0m15:41:47.003258 [debug] [MainThread]: Command `dbt compile` failed at 15:41:47.002951 after 2.63 seconds
+[0m15:41:47.004642 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559db19b80>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559db1b2f0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x78559e5b3e70>]}
+[0m15:41:47.005864 [debug] [MainThread]: Flushing usage events
+[0m15:41:48.272769 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m15:42:39.540402 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37fb35e3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37fd598f50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37f9f83c50>]}
+
+
+============================== 15:42:39.545817 | f86eaa43-d162-4aca-93eb-807e02ce38de ==============================
+[0m15:42:39.545817 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:42:39.546676 [debug] [MainThread]: running dbt with arguments {'log_cache_events': 'False', 'static_parser': 'True', 'warn_error': 'None', 'log_format': 'default', 'partial_parse': 'True', 'printer_width': '80', 'cache_selected_only': 'False', 'target_path': 'None', 'maximum_seed_size_mib': '1', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'use_colors': 'True', 'version_check': 'True', 'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2', 'indirect_selection': 'eager', 'introspect': 'True', 'quiet': 'False', 'fail_fast': 'False', 'debug': 'False', 'no_print': 'None', 'send_anonymous_usage_stats': 'True', 'profiles_dir': 'dbt_spark_v2', 'use_experimental_parser': 'False', 'log_path': 'dbt_spark_v2/logs', 'hints_enabled': 'True', 'empty': 'None', 'write_json': 'True'}
+[0m15:42:39.613204 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:42:39.613901 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:42:39.614429 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:42:39.960573 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'f86eaa43-d162-4aca-93eb-807e02ce38de', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37fb099f30>]}
+[0m15:42:40.069732 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'f86eaa43-d162-4aca-93eb-807e02ce38de', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37f9a0b680>]}
+[0m15:42:40.070833 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m15:42:40.165551 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m15:42:40.166429 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m15:42:40.167061 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'f86eaa43-d162-4aca-93eb-807e02ce38de', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37f9a75050>]}
+[0m15:42:42.629200 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'f86eaa43-d162-4aca-93eb-807e02ce38de', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37f94334d0>]}
+[0m15:42:42.633762 [info ] [MainThread]: Performance info: dbt_spark_v2/target/perf_info.json
+[0m15:42:42.747099 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_spark_v2/target/manifest.json
+[0m15:42:42.750608 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_spark_v2/target/semantic_manifest.json
+[0m15:42:42.787121 [debug] [MainThread]: Wrote artifact OsiDocument to dbt_spark_v2/target/osi_document.json
+[0m15:42:42.788174 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 3.3864987, "process_in_blocks": "440", "process_kernel_time": 0.36015, "process_mem_max_rss": "133880", "process_out_blocks": "2360", "process_user_time": 4.412833}
+[0m15:42:42.788845 [debug] [MainThread]: Command `dbt parse` succeeded at 15:42:42.788715 after 3.39 seconds
+[0m15:42:42.789410 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37f9f87e70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37f97d9710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f37f94d0940>]}
+[0m15:42:42.789995 [debug] [MainThread]: Flushing usage events
+[0m15:42:45.990566 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m15:42:48.849378 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e463723c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e44e3bed0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e44e3bb10>]}
+
+
+============================== 15:42:48.853385 | a27146d7-a515-457a-b807-0747bf9e44b6 ==============================
+[0m15:42:48.853385 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:42:48.854223 [debug] [MainThread]: running dbt with arguments {'fail_fast': 'False', 'log_format': 'default', 'invocation_command': 'dbt compile --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2 --select stg_token_transfers fct_daily_mint_volume', 'no_print': 'None', 'warn_error': 'None', 'profiles_dir': 'dbt_spark_v2', 'introspect': 'True', 'indirect_selection': 'eager', 'version_check': 'True', 'send_anonymous_usage_stats': 'True', 'partial_parse': 'True', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'write_json': 'True', 'quiet': 'False', 'log_path': 'dbt_spark_v2/logs', 'use_colors': 'True', 'printer_width': '80', 'cache_selected_only': 'False', 'debug': 'False', 'maximum_seed_size_mib': '1', 'hints_enabled': 'True', 'use_experimental_parser': 'False', 'target_path': 'None', 'log_cache_events': 'False', 'empty': 'False'}
+[0m15:42:48.922281 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:42:48.922984 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:42:48.923496 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:42:49.257621 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'a27146d7-a515-457a-b807-0747bf9e44b6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e460b5f30>]}
+[0m15:42:49.361048 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'a27146d7-a515-457a-b807-0747bf9e44b6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e44fcd6a0>]}
+[0m15:42:49.362152 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m15:42:49.498390 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m15:42:49.636136 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m15:42:49.636668 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m15:42:49.637086 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m15:42:49.652271 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'a27146d7-a515-457a-b807-0747bf9e44b6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e44522150>]}
+[0m15:42:49.800413 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_spark_v2/target/manifest.json
+[0m15:42:49.805784 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_spark_v2/target/semantic_manifest.json
+[0m15:42:49.823571 [debug] [MainThread]: Wrote artifact OsiDocument to dbt_spark_v2/target/osi_document.json
+[0m15:42:49.835375 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'a27146d7-a515-457a-b807-0747bf9e44b6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e4444a120>]}
+[0m15:42:49.836280 [info ] [MainThread]: Found 5 models, 4 sources, 516 macros
+[0m15:42:49.836872 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'a27146d7-a515-457a-b807-0747bf9e44b6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e442a8bb0>]}
+[0m15:42:49.838831 [info ] [MainThread]: 
+[0m15:42:49.839446 [info ] [MainThread]: Concurrency: 4 threads (target='dev')
+[0m15:42:49.840051 [info ] [MainThread]: 
+[0m15:42:49.840852 [debug] [MainThread]: Acquiring new spark connection 'master'
+[0m15:42:49.849230 [debug] [ThreadPool]: Acquiring new spark connection 'list_None_solana_staging'
+[0m15:42:49.858439 [debug] [ThreadPool]: Acquiring new spark connection 'list_None_solana_marts'
+[0m15:42:49.872260 [debug] [ThreadPool]: Spark adapter: NotImplemented: add_begin_query
+[0m15:42:49.874690 [debug] [ThreadPool]: Spark adapter: NotImplemented: add_begin_query
+[0m15:42:49.875445 [debug] [ThreadPool]: Using spark connection "list_None_solana_marts"
+[0m15:42:49.876246 [debug] [ThreadPool]: Using spark connection "list_None_solana_staging"
+[0m15:42:49.876891 [debug] [ThreadPool]: On list_None_solana_marts: /* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "solana_lakehouse", "target_name": "dev", "connection_name": "list_None_solana_marts"} */
+show table extended in solana_marts like '*'
+  
+[0m15:42:49.877495 [debug] [ThreadPool]: On list_None_solana_staging: /* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "solana_lakehouse", "target_name": "dev", "connection_name": "list_None_solana_staging"} */
+show table extended in solana_staging like '*'
+  
+[0m15:42:49.878076 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m15:42:49.878708 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m15:42:52.072387 [error] [ThreadPool]: failed to resolve sockaddr for dummy:10000
+[0m15:42:52.076253 [debug] [ThreadPool]: Spark adapter: Error while running:
+/* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "solana_lakehouse", "target_name": "dev", "connection_name": "list_None_solana_marts"} */
+show table extended in solana_marts like '*'
+  
+[0m15:42:52.078705 [debug] [ThreadPool]: Spark adapter: Database Error
+  failed to connect: TTransportException: failed to resolve sockaddr for dummy:10000
+[0m15:42:52.081736 [debug] [ThreadPool]: Spark adapter: Error while running:
+macro list_relations_without_caching
+[0m15:42:52.089580 [debug] [ThreadPool]: Spark adapter: Runtime Error
+  Database Error
+    failed to connect: TTransportException: failed to resolve sockaddr for dummy:10000
+[0m15:42:54.109196 [error] [ThreadPool]: failed to resolve sockaddr for dummy:10000
+[0m15:42:54.110387 [debug] [ThreadPool]: Spark adapter: Error while running:
+/* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "solana_lakehouse", "target_name": "dev", "connection_name": "list_None_solana_staging"} */
+show table extended in solana_staging like '*'
+  
+[0m15:42:54.111263 [debug] [ThreadPool]: Spark adapter: Database Error
+  failed to connect: TTransportException: failed to resolve sockaddr for dummy:10000
+[0m15:42:54.116779 [debug] [ThreadPool]: Spark adapter: Error while running:
+macro list_relations_without_caching
+[0m15:42:54.117782 [debug] [ThreadPool]: Spark adapter: Runtime Error
+  Database Error
+    failed to connect: TTransportException: failed to resolve sockaddr for dummy:10000
+[0m15:42:54.119861 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m15:42:54.120703 [debug] [MainThread]: Connection 'list_None_solana_staging' was properly closed.
+[0m15:42:54.121406 [debug] [MainThread]: Connection 'list_None_solana_marts' was properly closed.
+[0m15:42:54.122216 [error] [MainThread]: [[31mERROR[0m]: Encountered an error:
+Runtime Error
+  Runtime Error
+    Database Error
+      failed to connect: TTransportException: failed to resolve sockaddr for dummy:10000
+[0m15:42:54.123805 [debug] [MainThread]: Resource report: {"command_name": "compile", "command_success": false, "command_wall_clock_time": 5.4014425, "process_in_blocks": "88", "process_kernel_time": 0.399835, "process_mem_max_rss": "128844", "process_out_blocks": "1256", "process_user_time": 2.958784}
+[0m15:42:54.124568 [debug] [MainThread]: Command `dbt compile` failed at 15:42:54.124441 after 5.40 seconds
+[0m15:42:54.125212 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e4425dbf0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e45063ad0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7d5e444a28d0>]}
+[0m15:42:54.125816 [debug] [MainThread]: Flushing usage events
+[0m15:42:55.965768 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m15:43:06.182444 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aae8863c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730ab09a0f50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aad4abc50>]}
+
+
+============================== 15:43:06.189434 | ebdfccda-9ce7-4c9d-99b5-621eba2f5d8b ==============================
+[0m15:43:06.189434 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:43:06.191026 [debug] [MainThread]: running dbt with arguments {'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'indirect_selection': 'eager', 'fail_fast': 'False', 'profiles_dir': 'dbt_spark_v2', 'static_parser': 'True', 'use_experimental_parser': 'False', 'send_anonymous_usage_stats': 'True', 'introspect': 'True', 'log_format': 'default', 'write_json': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'log_path': 'dbt_spark_v2/logs', 'quiet': 'False', 'debug': 'False', 'partial_parse': 'True', 'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2', 'version_check': 'True', 'no_print': 'None', 'printer_width': '80', 'target_path': 'None', 'maximum_seed_size_mib': '1', 'use_colors': 'True', 'log_cache_events': 'False', 'hints_enabled': 'True', 'empty': 'None'}
+[0m15:43:06.296010 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:43:06.297062 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:43:06.297989 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:43:06.633691 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'ebdfccda-9ce7-4c9d-99b5-621eba2f5d8b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aae5d1f30>]}
+[0m15:43:06.757599 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'ebdfccda-9ce7-4c9d-99b5-621eba2f5d8b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aacd37680>]}
+[0m15:43:06.759227 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m15:43:06.923246 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m15:43:07.064488 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m15:43:07.065344 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m15:43:07.065782 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m15:43:07.078500 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'ebdfccda-9ce7-4c9d-99b5-621eba2f5d8b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aac964550>]}
+[0m15:43:07.082544 [info ] [MainThread]: Performance info: dbt_spark_v2/target/perf_info.json
+[0m15:43:07.239782 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_spark_v2/target/manifest.json
+[0m15:43:07.243794 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_spark_v2/target/semantic_manifest.json
+[0m15:43:07.258262 [debug] [MainThread]: Wrote artifact OsiDocument to dbt_spark_v2/target/osi_document.json
+[0m15:43:07.259323 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 1.2631094, "process_in_blocks": "0", "process_kernel_time": 0.365021, "process_mem_max_rss": "126904", "process_out_blocks": "1224", "process_user_time": 3.170131}
+[0m15:43:07.260035 [debug] [MainThread]: Command `dbt parse` succeeded at 15:43:07.259853 after 1.26 seconds
+[0m15:43:07.260622 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aad18f3e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aac94b4d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x730aad4afe70>]}
+[0m15:43:07.261355 [debug] [MainThread]: Flushing usage events
+[0m15:43:08.885345 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m15:52:58.239912 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e7446d5a3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e7448f9cf50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e744597fc50>]}
+
+
+============================== 15:52:58.244526 | 85ee2189-49a3-48c7-938e-a30d2f80fa64 ==============================
+[0m15:52:58.244526 [info ] [MainThread]: Running with dbt=1.12.4
+[0m15:52:58.245497 [debug] [MainThread]: running dbt with arguments {'log_cache_events': 'False', 'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2', 'maximum_seed_size_mib': '1', 'introspect': 'True', 'use_experimental_parser': 'False', 'version_check': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'warn_error': 'None', 'empty': 'None', 'write_json': 'True', 'indirect_selection': 'eager', 'debug': 'False', 'static_parser': 'True', 'log_path': 'dbt_spark_v2/logs', 'log_format': 'default', 'use_colors': 'True', 'profiles_dir': 'dbt_spark_v2', 'no_print': 'None', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'target_path': 'None', 'cache_selected_only': 'False', 'hints_enabled': 'True', 'printer_width': '80', 'fail_fast': 'False'}
+[0m15:52:58.313803 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m15:52:58.314475 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m15:52:58.315018 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m15:52:58.690538 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '85ee2189-49a3-48c7-938e-a30d2f80fa64', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e7446a9df30>]}
+[0m15:52:58.818109 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '85ee2189-49a3-48c7-938e-a30d2f80fa64', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e744540f680>]}
+[0m15:52:58.824888 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m15:52:58.959474 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m15:52:59.345450 [debug] [MainThread]: Partial parsing enabled: 4 files deleted, 2 files added, 1 files changed.
+[0m15:52:59.346193 [debug] [MainThread]: Partial parsing: added file: solana_lakehouse://models/marts/wallet_activity.sql
+[0m15:52:59.346737 [debug] [MainThread]: Partial parsing: added file: solana_lakehouse://models/marts/token_activity.sql
+[0m15:52:59.347366 [debug] [MainThread]: Partial parsing: updated file: solana_lakehouse://models/staging/_sources.yml
+[0m15:52:59.347851 [debug] [MainThread]: Partial parsing: deleted file: solana_lakehouse://models/staging/stg_transactions.sql
+[0m15:52:59.348323 [debug] [MainThread]: Partial parsing: deleted file: solana_lakehouse://models/marts/fct_daily_mint_volume.sql
+[0m15:52:59.348770 [debug] [MainThread]: Partial parsing: deleted file: solana_lakehouse://models/staging/stg_blocks.sql
+[0m15:52:59.349218 [debug] [MainThread]: Partial parsing: deleted file: solana_lakehouse://models/staging/stg_tokens.sql
+[0m15:53:00.485655 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '85ee2189-49a3-48c7-938e-a30d2f80fa64', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e7444df8a50>]}
+[0m15:53:00.500388 [info ] [MainThread]: Performance info: dbt_spark_v2/target/perf_info.json
+[0m15:53:00.921220 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_spark_v2/target/manifest.json
+[0m15:53:00.926508 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_spark_v2/target/semantic_manifest.json
+[0m15:53:00.943213 [debug] [MainThread]: Wrote artifact OsiDocument to dbt_spark_v2/target/osi_document.json
+[0m15:53:00.944426 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 2.8502746, "process_in_blocks": "0", "process_kernel_time": 0.429059, "process_mem_max_rss": "134524", "process_out_blocks": "2336", "process_user_time": 4.306629}
+[0m15:53:00.945187 [debug] [MainThread]: Command `dbt parse` succeeded at 15:53:00.945046 after 2.85 seconds
+[0m15:53:00.945735 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e74456673e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e744458c6e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7e74451e1710>]}
+[0m15:53:00.946358 [debug] [MainThread]: Flushing usage events
+[0m15:53:02.423880 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m16:09:59.306417 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479e8923c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7447a09a0f50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479d4abc50>]}
+
+
+============================== 16:09:59.310558 | d18c9f5d-3730-4260-8fc3-5fb7a8c57e61 ==============================
+[0m16:09:59.310558 [info ] [MainThread]: Running with dbt=1.12.4
+[0m16:09:59.311565 [debug] [MainThread]: running dbt with arguments {'partial_parse': 'True', 'profiles_dir': 'dbt_spark_v2', 'debug': 'False', 'send_anonymous_usage_stats': 'True', 'write_json': 'True', 'maximum_seed_size_mib': '1', 'use_experimental_parser': 'False', 'printer_width': '80', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'empty': 'None', 'use_colors': 'True', 'introspect': 'True', 'fail_fast': 'False', 'log_format': 'default', 'version_check': 'True', 'target_path': 'None', 'warn_error': 'None', 'cache_selected_only': 'False', 'log_path': 'dbt_spark_v2/logs', 'no_print': 'None', 'indirect_selection': 'eager', 'log_cache_events': 'False', 'hints_enabled': 'True', 'static_parser': 'True', 'quiet': 'False', 'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2'}
+[0m16:09:59.386099 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m16:09:59.386720 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m16:09:59.387941 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m16:09:59.809444 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'd18c9f5d-3730-4260-8fc3-5fb7a8c57e61', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479e5c1f30>]}
+[0m16:10:00.338143 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'd18c9f5d-3730-4260-8fc3-5fb7a8c57e61', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479cf27680>]}
+[0m16:10:00.342327 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m16:10:01.075622 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m16:10:01.845220 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m16:10:01.846370 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m16:10:01.846934 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m16:10:01.866261 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'd18c9f5d-3730-4260-8fc3-5fb7a8c57e61', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479cac0350>]}
+[0m16:10:01.877406 [info ] [MainThread]: Performance info: dbt_spark_v2/target/perf_info.json
+[0m16:10:02.177977 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_spark_v2/target/manifest.json
+[0m16:10:02.184836 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_spark_v2/target/semantic_manifest.json
+[0m16:10:02.207251 [debug] [MainThread]: Wrote artifact OsiDocument to dbt_spark_v2/target/osi_document.json
+[0m16:10:02.209503 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 3.0558648, "process_in_blocks": "0", "process_kernel_time": 0.572479, "process_mem_max_rss": "127668", "process_out_blocks": "1208", "process_user_time": 3.709354}
+[0m16:10:02.210638 [debug] [MainThread]: Command `dbt parse` succeeded at 16:10:02.210461 after 3.06 seconds
+[0m16:10:02.211402 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479d18f3e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479c94b3e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74479cd01710>]}
+[0m16:10:02.211983 [debug] [MainThread]: Flushing usage events
+[0m16:10:04.156153 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m16:57:06.940031 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a4c8e3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a6da4f50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a38a7c50>]}
+
+
+============================== 16:57:06.945967 | f8869547-cb7d-48ae-b32e-2cf850edb22c ==============================
+[0m16:57:06.945967 [info ] [MainThread]: Running with dbt=1.12.4
+[0m16:57:06.946886 [debug] [MainThread]: running dbt with arguments {'use_experimental_parser': 'False', 'send_anonymous_usage_stats': 'True', 'version_check': 'True', 'debug': 'False', 'log_path': '/home/freeman/Solana-Data/dbt_spark_v2/logs', 'profiles_dir': '/home/freeman/Solana-Data/dbt_spark_v2', 'no_print': 'None', 'use_colors': 'True', 'maximum_seed_size_mib': '1', 'indirect_selection': 'eager', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'partial_parse': 'True', 'hints_enabled': 'True', 'cache_selected_only': 'False', 'target_path': 'None', 'empty': 'None', 'introspect': 'True', 'fail_fast': 'False', 'static_parser': 'True', 'quiet': 'False', 'log_cache_events': 'False', 'warn_error': 'None', 'log_format': 'default', 'invocation_command': 'dbt parse --project-dir /home/freeman/Solana-Data/dbt_spark_v2 --profiles-dir /home/freeman/Solana-Data/dbt_spark_v2', 'printer_width': '80', 'write_json': 'True'}
+[0m16:57:07.046517 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m16:57:07.047194 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m16:57:07.047791 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m16:57:07.455246 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'f8869547-cb7d-48ae-b32e-2cf850edb22c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a49c5f30>]}
+[0m16:57:07.601580 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'f8869547-cb7d-48ae-b32e-2cf850edb22c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a313b680>]}
+[0m16:57:07.603229 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m16:57:07.734319 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m16:57:07.849551 [info ] [MainThread]: Unable to do partial parsing because a project config has changed
+[0m16:57:07.850277 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'f8869547-cb7d-48ae-b32e-2cf850edb22c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a33a3a50>]}
+[0m16:57:10.978638 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'f8869547-cb7d-48ae-b32e-2cf850edb22c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a2db9b80>]}
+[0m16:57:10.984711 [info ] [MainThread]: Performance info: /home/freeman/Solana-Data/dbt_spark_v2/target/perf_info.json
+[0m16:57:11.113765 [debug] [MainThread]: Wrote artifact WritableManifest to /home/freeman/Solana-Data/dbt_spark_v2/target/manifest.json
+[0m16:57:11.118100 [debug] [MainThread]: Wrote artifact SemanticManifest to /home/freeman/Solana-Data/dbt_spark_v2/target/semantic_manifest.json
+[0m16:57:11.142227 [debug] [MainThread]: Wrote artifact OsiDocument to /home/freeman/Solana-Data/dbt_spark_v2/target/osi_document.json
+[0m16:57:11.143458 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 4.341914, "process_in_blocks": "504", "process_kernel_time": 0.618822, "process_mem_max_rss": "137052", "process_out_blocks": "2344", "process_user_time": 5.190125}
+[0m16:57:11.144148 [debug] [MainThread]: Command `dbt parse` succeeded at 16:57:11.143985 after 4.34 seconds
+[0m16:57:11.144670 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a38b3e70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a3101710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f70a32d8940>]}
+[0m16:57:11.145233 [debug] [MainThread]: Flushing usage events
+[0m16:57:12.331548 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m17:01:52.417814 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697c68e3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697e7a4f50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697b2afc50>]}
+
+
+============================== 17:01:52.426516 | 99e163c4-fe2f-47fc-a268-fc4dca313f39 ==============================
+[0m17:01:52.426516 [info ] [MainThread]: Running with dbt=1.12.4
+[0m17:01:52.428110 [debug] [MainThread]: running dbt with arguments {'introspect': 'True', 'version_check': 'True', 'maximum_seed_size_mib': '1', 'use_colors': 'True', 'target_path': 'None', 'empty': 'None', 'use_experimental_parser': 'False', 'write_json': 'True', 'printer_width': '80', 'send_anonymous_usage_stats': 'True', 'fail_fast': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'invocation_command': 'dbt parse --project-dir /home/freeman/Solana-Data/dbt_spark_v2 --profiles-dir /home/freeman/Solana-Data/dbt_spark_v2', 'static_parser': 'True', 'quiet': 'False', 'partial_parse': 'True', 'indirect_selection': 'eager', 'log_path': '/home/freeman/Solana-Data/dbt_spark_v2/logs', 'cache_selected_only': 'False', 'hints_enabled': 'True', 'profiles_dir': '/home/freeman/Solana-Data/dbt_spark_v2', 'debug': 'False', 'warn_error': 'None', 'log_cache_events': 'False', 'no_print': 'None', 'log_format': 'default'}
+[0m17:01:52.537392 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m17:01:52.538062 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m17:01:52.538593 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m17:01:52.876378 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '99e163c4-fe2f-47fc-a268-fc4dca313f39', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697c3bdf30>]}
+[0m17:01:52.988372 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '99e163c4-fe2f-47fc-a268-fc4dca313f39', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697ab3b680>]}
+[0m17:01:52.989820 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m17:01:53.109775 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m17:01:53.453623 [info ] [MainThread]: Unable to do partial parsing because a project config has changed
+[0m17:01:53.454419 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': '99e163c4-fe2f-47fc-a268-fc4dca313f39', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697ada3b50>]}
+[0m17:01:56.434117 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '99e163c4-fe2f-47fc-a268-fc4dca313f39', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697a7abe30>]}
+[0m17:01:56.438993 [info ] [MainThread]: Performance info: /home/freeman/Solana-Data/dbt_spark_v2/target/perf_info.json
+[0m17:01:56.573048 [debug] [MainThread]: Wrote artifact WritableManifest to /home/freeman/Solana-Data/dbt_spark_v2/target/manifest.json
+[0m17:01:56.576497 [debug] [MainThread]: Wrote artifact SemanticManifest to /home/freeman/Solana-Data/dbt_spark_v2/target/semantic_manifest.json
+[0m17:01:56.592568 [debug] [MainThread]: Wrote artifact OsiDocument to /home/freeman/Solana-Data/dbt_spark_v2/target/osi_document.json
+[0m17:01:56.593994 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 4.3088384, "process_in_blocks": "0", "process_kernel_time": 0.482908, "process_mem_max_rss": "136784", "process_out_blocks": "2344", "process_user_time": 5.178082}
+[0m17:01:56.595138 [debug] [MainThread]: Command `dbt parse` succeeded at 17:01:56.594911 after 4.31 seconds
+[0m17:01:56.595949 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697b2b3e70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697ab09710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x74697a857040>]}
+[0m17:01:56.596636 [debug] [MainThread]: Flushing usage events
+[0m17:01:57.979089 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m17:02:46.393899 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x708589c8a3c0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70858c144f50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7085888abc50>]}
+
+
+============================== 17:02:46.401204 | 75a6a6f5-8ae0-4fc3-af59-eccfb81fe46d ==============================
+[0m17:02:46.401204 [info ] [MainThread]: Running with dbt=1.12.4
+[0m17:02:46.403032 [debug] [MainThread]: running dbt with arguments {'fail_fast': 'False', 'send_anonymous_usage_stats': 'True', 'no_print': 'None', 'introspect': 'True', 'hints_enabled': 'True', 'debug': 'False', 'static_parser': 'True', 'target_path': 'None', 'use_colors': 'True', 'indirect_selection': 'eager', 'partial_parse': 'True', 'profiles_dir': 'dbt_spark_v2', 'write_json': 'True', 'use_experimental_parser': 'False', 'maximum_seed_size_mib': '1', 'warn_error': 'None', 'printer_width': '80', 'quiet': 'False', 'log_format': 'default', 'log_path': 'dbt_spark_v2/logs', 'cache_selected_only': 'False', 'empty': 'None', 'version_check': 'True', 'invocation_command': 'dbt parse --project-dir dbt_spark_v2 --profiles-dir dbt_spark_v2', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'log_cache_events': 'False'}
+[0m17:02:46.469750 [debug] [MainThread]: Spark adapter: Setting pyhive.hive logging to ERROR
+[0m17:02:46.470414 [debug] [MainThread]: Spark adapter: Setting thrift.transport logging to ERROR
+[0m17:02:46.470909 [debug] [MainThread]: Spark adapter: Setting thrift.protocol logging to ERROR
+[0m17:02:46.864196 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '75a6a6f5-8ae0-4fc3-af59-eccfb81fe46d', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7085899d1f30>]}
+[0m17:02:46.971760 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '75a6a6f5-8ae0-4fc3-af59-eccfb81fe46d', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x708588137680>]}
+[0m17:02:46.972833 [info ] [MainThread]: Registered adapter: spark=1.11.0
+[0m17:02:47.071471 [debug] [MainThread]: checksum: b96e3e509a26f97c5bc48fd3cc100dc086403886432910321f8b6c7375a0ae56, vars: {}, profile: solana_lakehouse, target: dev, version: 1.12.4
+[0m17:02:47.224717 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 3 files added, 0 files changed.
+[0m17:02:47.225511 [debug] [MainThread]: Partial parsing: added file: solana_lakehouse://models/staging/stg_transactions.sql
+[0m17:02:47.226078 [debug] [MainThread]: Partial parsing: added file: solana_lakehouse://models/staging/stg_blocks.sql
+[0m17:02:47.226608 [debug] [MainThread]: Partial parsing: added file: solana_lakehouse://models/staging/stg_tokens.sql
+[0m17:02:47.793703 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '75a6a6f5-8ae0-4fc3-af59-eccfb81fe46d', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x708587d68650>]}
+[0m17:02:47.798240 [info ] [MainThread]: Performance info: dbt_spark_v2/target/perf_info.json
+[0m17:02:47.935710 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_spark_v2/target/manifest.json
+[0m17:02:47.939387 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_spark_v2/target/semantic_manifest.json
+[0m17:02:47.954473 [debug] [MainThread]: Wrote artifact OsiDocument to dbt_spark_v2/target/osi_document.json
+[0m17:02:47.955619 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 1.7020806, "process_in_blocks": "0", "process_kernel_time": 0.377316, "process_mem_max_rss": "131408", "process_out_blocks": "2376", "process_user_time": 3.760994}
+[0m17:02:47.956261 [debug] [MainThread]: Command `dbt parse` succeeded at 17:02:47.956134 after 1.70 seconds
+[0m17:02:47.956873 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x70858858ef30>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x708587684230>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7085888afe70>]}
+[0m17:02:47.957381 [debug] [MainThread]: Flushing usage events
+[0m17:02:49.108622 [debug] [MainThread]: An error was encountered while trying to flush usage events

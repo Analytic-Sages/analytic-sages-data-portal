@@ -1,0 +1,40 @@
+{
+    "path_count": 141,
+    "parsed_path_count": 3,
+    "static_analysis_path_count": 3,
+    "static_analysis_parsed_path_count": 0,
+    "is_partial_parse_enabled": true,
+    "is_static_analysis_enabled": true,
+    "read_files_elapsed": 0.015668300999095663,
+    "load_macros_elapsed": 0.0006347529997583479,
+    "parse_project_elapsed": 0.4930890839896165,
+    "patch_sources_elapsed": 1.65940000442788e-05,
+    "process_manifest_elapsed": 0.001600577001227066,
+    "load_all_elapsed": 0.7320141920063179,
+    "projects": [
+        {
+            "project_name": "solana_lakehouse",
+            "elapsed": 0.49301541200838983,
+            "parsers": [
+                {
+                    "parser": "model",
+                    "elapsed": 0.49300451698945835,
+                    "parsed_path_count": 3
+                }
+            ],
+            "parsed_path_count": 3
+        },
+        {
+            "project_name": "dbt_spark",
+            "elapsed": 0,
+            "parsers": [],
+            "parsed_path_count": 0
+        },
+        {
+            "project_name": "dbt",
+            "elapsed": 0,
+            "parsers": [],
+            "parsed_path_count": 0
+        }
+    ]
+}
