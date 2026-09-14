@@ -1,0 +1,3 @@
+# Minimal deps for curated BigQuery publish (keep isolated from conda base).
+google-cloud-bigquery>=3.45.0,<4
+google-cloud-storage>=3.0.0,<4

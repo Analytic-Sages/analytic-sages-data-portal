@@ -37,13 +37,14 @@ Known mismatch, fix before prod: `dbt_trino` gold models output `solana_token_da
 
 ## 4. Backend layout
 
-- `app/main.py`: FastAPI app, CORS GET only, routers health/tokens/wallets/transfers.
+- `app/main.py`: FastAPI app, CORS GET only, routers health/datasets/tokens/wallets/transfers.
+- `app/catalog.py`: learner-facing curated dataset metadata (schemas, SQL examples, labs, projects).
 - `app/trino_client.py`: `run_query(sql, params)` opens one short-lived connection per query, returns list of dicts, wraps `TrinoQueryError` as RuntimeError. Always parameterized with `?` placeholders.
-- `app/config.py`: env defaults, `MAX_LIMIT=100`, `DEFAULT_LIMIT=25`, `table()` router.
+- `app/config.py`: env defaults, `MAX_LIMIT=100`, `DEFAULT_LIMIT=25`, `table()` router, `USE_MOCK_DATA`.
 - `app/auth.py`: `require_key`, open when `API_KEY` empty, else checks `X-API-Key`.
 - `app/validators.py`: base58 address check (32-44 chars), limit 1..100, date range max 90 days, start <= end.
 - `app/cache.py`: in-memory TTL dict (`CACHE_TTL_SHORT=60`, `CACHE_TTL_LONG=600`). Same get/set interface a Redis swap can keep.
-- `app/routers/tokens.py`, `wallets.py`, `transfers.py`, `health.py`: endpoint -> SQL mapping below.
+- `app/routers/tokens.py`, `wallets.py`, `transfers.py`, `health.py`, `datasets.py`: endpoint -> SQL / catalog mapping below.
 
 ## 5. Endpoint to SQL map
 
