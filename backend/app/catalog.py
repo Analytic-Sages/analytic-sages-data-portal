@@ -20,6 +20,12 @@ def curated_table_for_dataset(dataset_slug: str) -> str:
     return curated_table_id(table)
 
 
+# Live BQ token_transfers uses raw `value` + `decimals` (not amount_ui).
+_AMOUNT_UI = (
+    "SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64)))"
+)
+
+
 def _transfers_sql() -> str:
     t = curated_table_for_dataset("transfers")
     return (
@@ -27,12 +33,12 @@ def _transfers_sql() -> str:
         f"  mint,\n"
         f"  source AS sender,\n"
         f"  destination AS receiver,\n"
-        f"  amount_ui AS amount,\n"
+        f"  {_AMOUNT_UI} AS amount,\n"
         f"  block_timestamp\n"
         f"FROM {t}\n"
         f"WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)\n"
         f"  AND CURRENT_DATE()\n"
-        f"ORDER BY amount_ui DESC\n"
+        f"ORDER BY amount DESC\n"
         f"LIMIT 10"
     )
 
@@ -309,15 +315,14 @@ DATASETS: list[dict[str, Any]] = [
             },
             {"name": "mint", "type": "STRING", "description": "Token mint address"},
             {
-                "name": "amount",
+                "name": "value",
                 "type": "NUMERIC",
-                "description": "Transfer amount (raw units)",
+                "description": "Transfer amount in raw token units",
             },
-            {"name": "decimals", "type": "INT64", "description": "Token decimals"},
             {
-                "name": "amount_ui",
-                "type": "FLOAT64",
-                "description": "Human-readable amount",
+                "name": "decimals",
+                "type": "NUMERIC",
+                "description": "Token decimals (use with value for UI amount)",
             },
             {"name": "fee", "type": "NUMERIC", "description": "Transfer fee if any"},
             {"name": "memo", "type": "STRING", "description": "Optional memo"},
@@ -386,7 +391,7 @@ DATASETS: list[dict[str, Any]] = [
             {
                 "name": "total_volume",
                 "type": "FLOAT64",
-                "description": "Sum of amount_ui that day",
+                "description": "Sum of UI transfer volume that day",
             },
             {
                 "name": "unique_senders",

@@ -125,7 +125,6 @@ def seed_sample(client, project: str, dataset: str) -> None:
     for i in range(40):
         mint, decimals = mints[i % 2]
         raw = (i + 1) * 10**decimals * (40 - i)
-        amount_ui = float(raw) / (10**decimals)
         ts = now - timedelta(hours=i * 3)
         transfers.append(
             {
@@ -135,9 +134,8 @@ def seed_sample(client, project: str, dataset: str) -> None:
                 "source": wallets[i % len(wallets)],
                 "destination": wallets[(i + 1) % len(wallets)],
                 "mint": mint,
-                "amount": str(raw),
+                "value": str(raw),
                 "decimals": decimals,
-                "amount_ui": amount_ui,
                 "fee": "5000",
                 "memo": None,
                 "transfer_type": "transfer",
@@ -232,9 +230,8 @@ def load_from_gcs(
               CAST(source AS STRING) AS source,
               CAST(destination AS STRING) AS destination,
               CAST(mint AS STRING) AS mint,
-              CAST(value AS NUMERIC) AS amount,
-              CAST(decimals AS INT64) AS decimals,
-              SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64))) AS amount_ui,
+              CAST(value AS NUMERIC) AS value,
+              CAST(decimals AS NUMERIC) AS decimals,
               CAST(fee AS NUMERIC) AS fee,
               CAST(memo AS STRING) AS memo,
               CAST(transfer_type AS STRING) AS transfer_type,

@@ -26,9 +26,8 @@ CURATED_TABLES: dict[str, dict] = {
             ("source", "STRING", "Sender wallet"),
             ("destination", "STRING", "Receiver wallet"),
             ("mint", "STRING", "Token mint address"),
-            ("amount", "NUMERIC", "Transfer amount (raw units)"),
-            ("decimals", "INT64", "Token decimals"),
-            ("amount_ui", "FLOAT64", "Human-readable amount"),
+            ("value", "NUMERIC", "Transfer amount in raw token units"),
+            ("decimals", "NUMERIC", "Token decimals"),
             ("fee", "NUMERIC", "Transfer fee if any"),
             ("memo", "STRING", "Optional memo"),
             ("transfer_type", "STRING", "Transfer type"),
@@ -61,7 +60,7 @@ CURATED_TABLES: dict[str, dict] = {
             ("block_date", "DATE", "UTC calendar day"),
             ("mint", "STRING", "Token mint address"),
             ("transfer_count", "INT64", "Number of transfers that day"),
-            ("total_volume", "FLOAT64", "Sum of amount_ui that day"),
+            ("total_volume", "FLOAT64", "Sum of UI transfer volume that day"),
             ("unique_senders", "INT64", "Distinct sending wallets"),
             ("unique_receivers", "INT64", "Distinct receiving wallets"),
             ("_published_at", "TIMESTAMP", "When Analytic Sages published this row"),
@@ -116,7 +115,7 @@ SELECT
   DATE(block_timestamp) AS block_date,
   mint,
   COUNT(*) AS transfer_count,
-  SUM(amount_ui) AS total_volume,
+  SUM(SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64)))) AS total_volume,
   COUNT(DISTINCT source) AS unique_senders,
   COUNT(DISTINCT destination) AS unique_receivers,
   CURRENT_TIMESTAMP() AS _published_at
@@ -131,11 +130,19 @@ PARTITION BY block_date
 CLUSTER BY wallet
 AS
 WITH unified AS (
-  SELECT DATE(block_timestamp) AS block_date, source AS wallet, amount_ui, 'sent' AS direction
+  SELECT
+    DATE(block_timestamp) AS block_date,
+    source AS wallet,
+    SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64))) AS amount_ui,
+    'sent' AS direction
   FROM `{project}.{dataset}.token_transfers`
   WHERE source IS NOT NULL
   UNION ALL
-  SELECT DATE(block_timestamp) AS block_date, destination AS wallet, amount_ui, 'received' AS direction
+  SELECT
+    DATE(block_timestamp) AS block_date,
+    destination AS wallet,
+    SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64))) AS amount_ui,
+    'received' AS direction
   FROM `{project}.{dataset}.token_transfers`
   WHERE destination IS NOT NULL
 )

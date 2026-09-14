@@ -19,6 +19,9 @@ _WINDOW = (
     "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)\n"
     "  AND CURRENT_DATE()"
 )
+_AMOUNT_UI = (
+    "SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64)))"
+)
 
 # Stable IDs so re-seeding is idempotent.
 VIZ_IDS = {
@@ -41,7 +44,7 @@ SHOWCASE_VIZ_DEFS: list[dict[str, Any]] = [
             "FROM (\n"
             "  SELECT\n"
             "    TIMESTAMP_TRUNC(block_timestamp, HOUR) AS hour,\n"
-            "    SUM(amount_ui) AS hourly_volume\n"
+            f"    SUM({_AMOUNT_UI}) AS hourly_volume\n"
             "  FROM solana_curated.token_transfers\n"
             f"  {_WINDOW}\n"
             "  GROUP BY hour\n"
@@ -57,7 +60,7 @@ SHOWCASE_VIZ_DEFS: list[dict[str, Any]] = [
         "sql": (
             "SELECT\n"
             "  TIMESTAMP_TRUNC(block_timestamp, HOUR) AS hour,\n"
-            "  SUM(amount_ui) AS transfer_volume\n"
+            f"  SUM({_AMOUNT_UI}) AS transfer_volume\n"
             "FROM solana_curated.token_transfers\n"
             f"{_WINDOW}\n"
             "GROUP BY hour\n"
@@ -89,7 +92,7 @@ SHOWCASE_VIZ_DEFS: list[dict[str, Any]] = [
         "sql": (
             "SELECT\n"
             "  mint,\n"
-            "  SUM(amount_ui) AS total_volume\n"
+            f"  SUM({_AMOUNT_UI}) AS total_volume\n"
             "FROM solana_curated.token_transfers\n"
             f"{_WINDOW}\n"
             "GROUP BY mint\n"

@@ -234,10 +234,11 @@ def test_query_policy():
 
 def test_query_run_requires_auth():
     sql = (
-        "SELECT mint, source AS sender, destination AS receiver, amount_ui AS amount "
+        "SELECT mint, source AS sender, destination AS receiver, "
+        "SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64))) AS amount "
         "FROM solana_curated.token_transfers "
         "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) "
-        "AND CURRENT_DATE() ORDER BY amount_ui DESC LIMIT 10"
+        "AND CURRENT_DATE() ORDER BY amount DESC LIMIT 10"
     )
     res = client.post("/query/run", json={"sql": sql})
     assert res.status_code == 401
@@ -246,10 +247,11 @@ def test_query_run_requires_auth():
 
 def test_query_run_mock():
     sql = (
-        "SELECT mint, source AS sender, destination AS receiver, amount_ui AS amount "
+        "SELECT mint, source AS sender, destination AS receiver, "
+        "SAFE_DIVIDE(CAST(value AS FLOAT64), POW(10, CAST(decimals AS FLOAT64))) AS amount "
         "FROM solana_curated.token_transfers "
         "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) "
-        "AND CURRENT_DATE() ORDER BY amount_ui DESC LIMIT 10"
+        "AND CURRENT_DATE() ORDER BY amount DESC LIMIT 10"
     )
     _approved_client("runner@example.com")
     res = client.post("/query/run", json={"sql": sql})
