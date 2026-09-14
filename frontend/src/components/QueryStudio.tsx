@@ -292,14 +292,14 @@ export function QueryStudio({
             <div className="callout access-banner">
               <p>
                 {authState === 'pending'
-                  ? 'You are on the early-access waitlist. Draft SQL anytime; Run unlocks after approval.'
-                  : 'Early access is required to run queries.'}
+                  ? 'Your account is pending access. Draft SQL anytime; Run unlocks after approval.'
+                  : 'Sign in to run queries against curated blockchain data.'}
               </p>
               <div className="cta-row">
                 {authState === 'anonymous' ? (
                   <>
                     <Link className="btn btn-primary" to="/signup">
-                      Request early access
+                      Create account
                     </Link>
                     <Link className="btn btn-ghost" to="/login">
                       Sign in
@@ -307,7 +307,7 @@ export function QueryStudio({
                   </>
                 ) : (
                   <Link className="btn btn-primary" to="/early-access">
-                    Waitlist status
+                    Account status
                   </Link>
                 )}
               </div>

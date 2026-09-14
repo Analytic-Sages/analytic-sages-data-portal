@@ -57,7 +57,7 @@ export function Layout() {
                     Sign in
                   </Link>
                   <Link to="/signup" className="btn btn-primary nav-cta" onClick={closeNav}>
-                    Early access
+                    Sign up
                   </Link>
                 </>
               )}
@@ -69,7 +69,7 @@ export function Layout() {
                     onClick={closeNav}
                     title={user.email}
                   >
-                    {state === 'approved' ? 'Approved' : 'Waitlist'}
+                    {user.email.split('@')[0]}
                   </Link>
                   <button
                     type="button"

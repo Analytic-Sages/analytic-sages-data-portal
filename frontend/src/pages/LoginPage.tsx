@@ -39,7 +39,7 @@ export function LoginPage() {
   return (
     <main className="shell page auth-page">
       <h1>Sign in</h1>
-      <p className="lede">Access Query Studio with your early-access account.</p>
+      <p className="lede">Access Query Studio with your account.</p>
       <form className="auth-form" onSubmit={onSubmit}>
         <label>
           Email
@@ -67,7 +67,7 @@ export function LoginPage() {
         </button>
       </form>
       <p className="muted-text">
-        No account yet? <Link to="/signup">Request early access</Link>
+        No account yet? <Link to="/signup">Create account</Link>
         {' · '}
         <Link to="/forgot-password">Forgot password</Link>
       </p>

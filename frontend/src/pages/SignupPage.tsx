@@ -37,9 +37,9 @@ export function SignupPage() {
 
   return (
     <main className="shell page auth-page">
-      <h1>Request early access</h1>
+      <h1>Create account</h1>
       <p className="lede">
-        Create an account to join the waitlist. After approval you can run SQL in Query Studio.
+        Sign up to use Query Studio. This portal is private: you need an account to run SQL.
       </p>
       <form className="auth-form" onSubmit={onSubmit}>
         <div className="auth-name-row">
@@ -75,7 +75,7 @@ export function SignupPage() {
         </label>
         {error && <p className="error">{error}</p>}
         <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? 'Creating account…' : 'Join waitlist'}
+          {busy ? 'Creating account…' : 'Create account'}
         </button>
       </form>
       <p className="muted-text">

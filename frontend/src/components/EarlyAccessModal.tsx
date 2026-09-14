@@ -24,24 +24,20 @@ export function EarlyAccessModal({ open, onClose, code }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="early-access-title">
-          {needsVerify
-            ? 'Verify your email'
-            : pending
-              ? 'You are on the waitlist'
-              : 'Early access required'}
+          {needsVerify ? 'Verify your email' : pending ? 'Account pending' : 'Sign in required'}
         </h2>
         <p>
           {needsVerify
-            ? 'Check your inbox for a verification link. Query Studio unlocks after email verification and approval.'
+            ? 'Check your inbox for a verification link before using Query Studio.'
             : pending
-              ? 'Thanks for joining. We are approving early-access accounts in waves. You can browse the catalog and labs while you wait.'
-              : 'Query Studio is limited to approved early-access users. Request access to run SQL against curated blockchain datasets.'}
+              ? 'Your account is pending access. You can browse the catalog and labs while you wait.'
+              : 'Create an account or sign in to run SQL against curated blockchain datasets.'}
         </p>
         <div className="cta-row">
           {!user && (
             <>
               <Link className="btn btn-primary" to="/signup" onClick={onClose}>
-                Request early access
+                Create account
               </Link>
               <Link className="btn btn-ghost" to="/login" onClick={onClose}>
                 Sign in
@@ -50,7 +46,7 @@ export function EarlyAccessModal({ open, onClose, code }: Props) {
           )}
           {user && pending && (
             <Link className="btn btn-primary" to="/early-access" onClick={onClose}>
-              View waitlist status
+              Account status
             </Link>
           )}
           <button type="button" className="btn btn-ghost" onClick={onClose}>

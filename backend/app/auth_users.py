@@ -57,6 +57,11 @@ def approved_tester_emails() -> set[str]:
     return {e.strip().lower() for e in raw.split(",") if e.strip()}
 
 
+def private_access_mode() -> bool:
+    """When enabled, signed-in users skip the waitlist (private beta, no approval queue)."""
+    return os.environ.get("PRIVATE_ACCESS_MODE", "1").lower() in {"1", "true", "yes"}
+
+
 def apply_tester_seed(user: User) -> None:
     if user.email.lower() in approved_tester_emails():
         user.is_tester = True
@@ -64,6 +69,18 @@ def apply_tester_seed(user: User) -> None:
         user.email_verified = True
         user.approved_at = datetime.now(timezone.utc)
         user.approved_by = "APPROVED_TESTER_EMAILS"
+
+
+def apply_access_policy(user: User) -> None:
+    """Apply tester allow-list and optional private (no-waitlist) access."""
+    apply_tester_seed(user)
+    if private_access_mode() and user.access_status != "SUSPENDED":
+        user.access_status = ACCESS_APPROVED
+        user.email_verified = True
+        if user.approved_at is None:
+            user.approved_at = datetime.now(timezone.utc)
+        if not user.approved_by:
+            user.approved_by = "PRIVATE_ACCESS_MODE"
 
 
 def cookie_secure() -> bool:
@@ -198,7 +215,7 @@ def create_user(
         access_status=ACCESS_WAITLIST_PENDING,
         is_tester=False,
     )
-    apply_tester_seed(user)
+    apply_access_policy(user)
     db.add(user)
     db.commit()
     db.refresh(user)

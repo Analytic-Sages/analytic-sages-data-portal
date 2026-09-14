@@ -111,14 +111,14 @@ export function HomePage() {
           <h2>Build your own</h2>
           <p className="section-lead">
             Open Query Studio to write SQL, visualize results, and save charts to a dashboard.
-            Running queries requires early access approval.
+            Sign in to run queries against curated blockchain data.
           </p>
           <div className="cta-row">
             <Link className="btn btn-primary btn-lg" to="/query">
               Open Query Studio
             </Link>
             <Link className="btn btn-ghost btn-lg" to="/signup">
-              Request early access
+              Create account
             </Link>
           </div>
         </div>

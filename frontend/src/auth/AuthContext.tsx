@@ -105,10 +105,10 @@ export function useAuth() {
 export function accessErrorMessage(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.code === 'WAITLIST_PENDING') {
-      return 'Your account is on the early-access waitlist. Query Studio unlocks after approval.'
+      return 'Your account is pending access. Query Studio unlocks after approval.'
     }
     if (err.code === 'EARLY_ACCESS_REQUIRED') {
-      return 'Query Studio access requires early access approval.'
+      return 'Sign in to run queries in Query Studio.'
     }
     if (err.code === 'EMAIL_VERIFICATION_REQUIRED') {
       return 'Verify your email before using Query Studio.'

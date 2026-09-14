@@ -12,7 +12,13 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 def database_url() -> str:
     default = Path(__file__).resolve().parent.parent / "var" / "portal_auth.db"
-    return os.environ.get("DATABASE_URL", f"sqlite:///{default}")
+    url = os.environ.get("DATABASE_URL", f"sqlite:///{default}")
+    # Render and many hosts provide postgres://; SQLAlchemy expects postgresql://
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg2://" + url[len("postgres://") :]
+    elif url.startswith("postgresql://") and "+psycopg2" not in url:
+        url = "postgresql+psycopg2://" + url[len("postgresql://") :]
+    return url
 
 
 class Base(DeclarativeBase):

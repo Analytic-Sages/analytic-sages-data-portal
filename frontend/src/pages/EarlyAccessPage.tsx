@@ -20,13 +20,14 @@ export function EarlyAccessPage() {
   if (state === 'anonymous') {
     return (
       <main className="shell page auth-page">
-        <h1>Early access</h1>
+        <h1>Private access</h1>
         <p className="lede">
-          Query Studio is limited to approved early-access users. Browse the catalog and labs anytime.
+          Query Studio requires an account. Browse the catalog and labs anytime, then sign in to run
+          SQL.
         </p>
         <div className="cta-row">
           <Link className="btn btn-primary" to="/signup">
-            Request early access
+            Create account
           </Link>
           <Link className="btn btn-ghost" to="/login">
             Sign in
@@ -39,7 +40,7 @@ export function EarlyAccessPage() {
   if (state === 'approved') {
     return (
       <main className="shell page auth-page">
-        <h1>You are approved</h1>
+        <h1>You have access</h1>
         <p className="lede">Your account can run queries in Query Studio.</p>
         <Link className="btn btn-primary" to="/query">
           Open Query Studio
@@ -50,14 +51,14 @@ export function EarlyAccessPage() {
 
   return (
     <main className="shell page auth-page">
-      <h1>You are on the waitlist</h1>
+      <h1>Account pending</h1>
       <p className="lede">
-        Signed in as <strong>{user?.email}</strong>. We approve accounts in waves. You can keep
-        exploring datasets and labs while you wait.
+        Signed in as <strong>{user?.email}</strong>. Access is limited until an admin approves your
+        account (waitlist mode).
       </p>
       {!user?.email_verified && (
         <div className="callout">
-          <p>Verify your email to finish joining early access.</p>
+          <p>Verify your email to finish setting up your account.</p>
           <button type="button" className="btn btn-ghost" onClick={() => void resend()}>
             Resend verification email
           </button>

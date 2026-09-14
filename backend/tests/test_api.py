@@ -16,6 +16,8 @@ os.close(_fd)
 os.environ["DATABASE_URL"] = f"sqlite:///{_auth_db}"
 os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")
 os.environ.setdefault("APPROVED_TESTER_EMAILS", "approved.tester@example.com")
+# Keep waitlist tests explicit; private mode is on by default in app code.
+os.environ["PRIVATE_ACCESS_MODE"] = "0"
 
 from app.cache import cache
 from app.config import get_settings
@@ -307,6 +309,31 @@ def test_approved_tester_email_seed():
     assert user["is_tester"] is True
     assert user["can_run_queries"] is True
     assert user["access_status"] == "APPROVED"
+
+
+def test_private_access_mode_skips_waitlist(monkeypatch):
+    monkeypatch.setenv("PRIVATE_ACCESS_MODE", "1")
+    res = _signup("private.user@example.com")
+    assert res.status_code == 200
+    user = res.json()["user"]
+    assert user["access_status"] == "APPROVED"
+    assert user["email_verified"] is True
+    assert user["can_run_queries"] is True
+    allowed = client.post(
+        "/query/run",
+        json={
+            "sql": (
+                "SELECT mint FROM solana_curated.transfers "
+                "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) "
+                "AND CURRENT_DATE() LIMIT 5"
+            )
+        },
+    )
+    assert allowed.status_code == 200
+    cfg = client.get("/auth/config")
+    assert cfg.status_code == 200
+    assert cfg.json()["private_access_mode"] is True
+    assert cfg.json()["waitlist_enabled"] is False
 
 
 def test_admin_policy_update(monkeypatch, tmp_path):

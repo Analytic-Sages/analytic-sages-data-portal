@@ -54,6 +54,11 @@ class Settings:
             "true",
             "yes",
         }
+        self.private_access_mode = os.environ.get("PRIVATE_ACCESS_MODE", "1").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
 
 
 @lru_cache

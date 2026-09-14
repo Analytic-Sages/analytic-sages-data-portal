@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.auth_users import (
     SESSION_COOKIE,
-    apply_tester_seed,
+    apply_access_policy,
     clear_session_cookie,
     create_email_token,
     create_session,
@@ -18,6 +18,7 @@ from app.auth_users import (
     get_optional_user,
     hash_password,
     hash_token,
+    private_access_mode,
     set_session_cookie,
     verify_password,
 )
@@ -53,6 +54,14 @@ class ForgotBody(BaseModel):
     email: EmailStr
 
 
+@router.get("/config")
+def auth_config() -> dict:
+    return {
+        "private_access_mode": private_access_mode(),
+        "waitlist_enabled": not private_access_mode(),
+    }
+
+
 @router.post("/signup")
 def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) -> dict:
     email = body.email.strip().lower()
@@ -86,7 +95,7 @@ def login(body: LoginBody, response: Response, db: Session = Depends(get_db)) ->
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_CREDENTIALS", "message": "Invalid email or password."},
         )
-    apply_tester_seed(user)
+    apply_access_policy(user)
     db.commit()
     db.refresh(user)
     raw_session = create_session(db, user)
@@ -110,9 +119,12 @@ def logout(
 
 
 @router.get("/me")
-def me(user: User | None = Depends(get_optional_user)) -> dict:
+def me(db: Session = Depends(get_db), user: User | None = Depends(get_optional_user)) -> dict:
     if user is None:
         return {"user": None}
+    apply_access_policy(user)
+    db.commit()
+    db.refresh(user)
     return {"user": user.to_public_dict()}
 
 
@@ -144,7 +156,7 @@ def verify_email(body: TokenBody, db: Session = Depends(get_db)) -> dict:
         raise HTTPException(status_code=400, detail={"code": "INVALID_TOKEN", "message": "Invalid token."})
     user.email_verified = True
     row.used_at = datetime.now(timezone.utc)
-    apply_tester_seed(user)
+    apply_access_policy(user)
     db.commit()
     db.refresh(user)
     return {"user": user.to_public_dict()}
