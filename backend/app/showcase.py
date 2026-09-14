@@ -42,7 +42,7 @@ SHOWCASE_VIZ_DEFS: list[dict[str, Any]] = [
             "  SELECT\n"
             "    TIMESTAMP_TRUNC(block_timestamp, HOUR) AS hour,\n"
             "    SUM(amount_ui) AS hourly_volume\n"
-            "  FROM solana_curated.transfers\n"
+            "  FROM solana_curated.token_transfers\n"
             f"  {_WINDOW}\n"
             "  GROUP BY hour\n"
             ")"
@@ -58,7 +58,7 @@ SHOWCASE_VIZ_DEFS: list[dict[str, Any]] = [
             "SELECT\n"
             "  TIMESTAMP_TRUNC(block_timestamp, HOUR) AS hour,\n"
             "  SUM(amount_ui) AS transfer_volume\n"
-            "FROM solana_curated.transfers\n"
+            "FROM solana_curated.token_transfers\n"
             f"{_WINDOW}\n"
             "GROUP BY hour\n"
             "ORDER BY hour"
@@ -74,7 +74,7 @@ SHOWCASE_VIZ_DEFS: list[dict[str, Any]] = [
             "SELECT\n"
             "  TIMESTAMP_TRUNC(block_timestamp, HOUR) AS hour,\n"
             "  COUNT(*) AS transfer_count\n"
-            "FROM solana_curated.transfers\n"
+            "FROM solana_curated.token_transfers\n"
             f"{_WINDOW}\n"
             "GROUP BY hour\n"
             "ORDER BY hour"
@@ -90,7 +90,7 @@ SHOWCASE_VIZ_DEFS: list[dict[str, Any]] = [
             "SELECT\n"
             "  mint,\n"
             "  SUM(amount_ui) AS total_volume\n"
-            "FROM solana_curated.transfers\n"
+            "FROM solana_curated.token_transfers\n"
             f"{_WINDOW}\n"
             "GROUP BY mint\n"
             "ORDER BY total_volume DESC\n"
@@ -132,17 +132,24 @@ def ensure_showcase() -> store.StudioDashboard | None:
     """Create the featured showcase dashboard if it does not exist."""
     existing = store.get_dashboard(SHOWCASE_SLUG)
     if existing is not None:
-        if existing.owner_user_id != store.SYSTEM_OWNER:
-            data = store.load_store()
-            for board in data.dashboards:
-                if board.slug == SHOWCASE_SLUG:
-                    board.owner_user_id = store.SYSTEM_OWNER
-            for viz in data.visualizations:
-                if viz.id in existing.visualization_ids:
+        data = store.load_store()
+        by_id = {spec["id"]: spec for spec in SHOWCASE_VIZ_DEFS}
+        changed = False
+        for viz in data.visualizations:
+            if viz.id in by_id:
+                spec = by_id[viz.id]
+                if viz.sql != spec["sql"] or viz.owner_user_id != store.SYSTEM_OWNER:
+                    viz.sql = spec["sql"]
                     viz.owner_user_id = store.SYSTEM_OWNER
+                    viz.updated_at = _now()
+                    changed = True
+        for board in data.dashboards:
+            if board.slug == SHOWCASE_SLUG and board.owner_user_id != store.SYSTEM_OWNER:
+                board.owner_user_id = store.SYSTEM_OWNER
+                changed = True
+        if changed:
             store.save_store(data)
-            existing = store.get_dashboard(SHOWCASE_SLUG)
-        return existing
+        return store.get_dashboard(SHOWCASE_SLUG)
 
     data = store.load_store()
     now = _now()

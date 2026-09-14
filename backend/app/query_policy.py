@@ -30,7 +30,7 @@ class QueryPolicy:
     max_days: int = 2
     allowed_dataset: str = "solana_curated"
     allowed_tables: tuple[str, ...] = (
-        "transfers",
+        "token_transfers",
         "transactions",
         "token_activity",
         "wallet_activity",
@@ -65,7 +65,7 @@ class QueryPolicy:
 def _from_env() -> QueryPolicy:
     tables = os.environ.get(
         "QUERY_ALLOWED_TABLES",
-        "transfers,transactions,token_activity,wallet_activity",
+        "token_transfers,transactions,token_activity,wallet_activity",
     )
     return QueryPolicy(
         enabled=os.environ.get("QUERY_ENABLED", "1").lower() in {"1", "true", "yes"},

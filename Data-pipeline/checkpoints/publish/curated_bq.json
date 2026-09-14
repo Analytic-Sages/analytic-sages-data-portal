@@ -4,7 +4,7 @@
   "dataset": "solana_curated",
   "source": "sample",
   "tables": [
-    "analytic-sages-data-portal.solana_curated.transfers",
+    "analytic-sages-data-portal.solana_curated.token_transfers",
     "analytic-sages-data-portal.solana_curated.transactions",
     "analytic-sages-data-portal.solana_curated.token_activity",
     "analytic-sages-data-portal.solana_curated.wallet_activity"

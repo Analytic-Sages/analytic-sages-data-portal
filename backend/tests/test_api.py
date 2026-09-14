@@ -135,8 +135,8 @@ def test_dataset_detail():
     assert body["grain"].startswith("One row")
     assert body["columns"]
     assert body["sql_examples"]
-    assert body["curated_table"] == "solana_curated.transfers"
-    assert "FROM solana_curated.transfers" in body["sql_examples"][0]["sql"]
+    assert body["curated_table"] == "solana_curated.token_transfers"
+    assert "FROM solana_curated.token_transfers" in body["sql_examples"][0]["sql"]
 
 
 def test_lab_01():
@@ -144,8 +144,8 @@ def test_lab_01():
     assert res.status_code == 200
     body = res.json()
     assert body["number"] == 1
-    assert "FROM solana_curated.transfers" in body["starter_sql"]
-    assert body["curated_table"] == "solana_curated.transfers"
+    assert "FROM solana_curated.token_transfers" in body["starter_sql"]
+    assert body["curated_table"] == "solana_curated.token_transfers"
 
 
 
@@ -229,13 +229,13 @@ def test_query_policy():
     body = res.json()
     assert body["max_days"] == 2
     assert body["max_bytes_billed"] > 0
-    assert "solana_curated.transfers" in body["allowed_refs"]
+    assert "solana_curated.token_transfers" in body["allowed_refs"]
 
 
 def test_query_run_requires_auth():
     sql = (
         "SELECT mint, source AS sender, destination AS receiver, amount_ui AS amount "
-        "FROM solana_curated.transfers "
+        "FROM solana_curated.token_transfers "
         "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) "
         "AND CURRENT_DATE() ORDER BY amount_ui DESC LIMIT 10"
     )
@@ -247,7 +247,7 @@ def test_query_run_requires_auth():
 def test_query_run_mock():
     sql = (
         "SELECT mint, source AS sender, destination AS receiver, amount_ui AS amount "
-        "FROM solana_curated.transfers "
+        "FROM solana_curated.token_transfers "
         "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) "
         "AND CURRENT_DATE() ORDER BY amount_ui DESC LIMIT 10"
     )
@@ -263,7 +263,7 @@ def test_query_rejects_dml():
     _approved_client("dml@example.com")
     res = client.post(
         "/query/run",
-        json={"sql": "DELETE FROM solana_curated.transfers WHERE TRUE"},
+        json={"sql": "DELETE FROM solana_curated.token_transfers WHERE TRUE"},
     )
     assert res.status_code == 400
 
@@ -274,7 +274,7 @@ def test_query_rejects_old_date():
         "/query/run",
         json={
             "sql": (
-                "SELECT * FROM solana_curated.transfers "
+                "SELECT * FROM solana_curated.token_transfers "
                 "WHERE DATE(block_timestamp) = '2020-01-01'"
             )
         },
@@ -302,7 +302,7 @@ def test_signup_waitlist_and_approve():
 
     blocked = client.post(
         "/query/run",
-        json={"sql": "SELECT 1 FROM solana_curated.transfers LIMIT 1"},
+        json={"sql": "SELECT 1 FROM solana_curated.token_transfers LIMIT 1"},
     )
     assert blocked.status_code == 403
     assert blocked.json()["detail"]["code"] == "WAITLIST_PENDING"
@@ -311,7 +311,7 @@ def test_signup_waitlist_and_approve():
         "/query/run",
         json={
             "sql": (
-                "SELECT mint FROM solana_curated.transfers "
+                "SELECT mint FROM solana_curated.token_transfers "
                 "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) "
                 "AND CURRENT_DATE() LIMIT 5"
             )
@@ -343,7 +343,7 @@ def test_private_access_mode_skips_waitlist(monkeypatch):
         "/query/run",
         json={
             "sql": (
-                "SELECT mint FROM solana_curated.transfers "
+                "SELECT mint FROM solana_curated.token_transfers "
                 "WHERE DATE(block_timestamp) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) "
                 "AND CURRENT_DATE() LIMIT 5"
             )
@@ -441,7 +441,7 @@ def test_studio_visualization_and_dashboard(monkeypatch, tmp_path):
         "/studio/visualizations",
         json={
             "title": "Daily volume",
-            "sql": "SELECT day, volume FROM solana_curated.transfers",
+            "sql": "SELECT day, volume FROM solana_curated.token_transfers",
             "chart_type": "line",
             "x_axis": "day",
             "y_axis": "volume",

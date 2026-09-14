@@ -6,9 +6,22 @@ from typing import Any
 
 from app.bigquery_links import curated_table_id, bigquery_table_url
 
+# Portal dataset slug → BigQuery curated table name
+_DATASET_TABLE = {
+    "transfers": "token_transfers",
+    "token_activity": "token_activity",
+    "wallet_activity": "wallet_activity",
+    "transactions": "transactions",
+}
+
+
+def curated_table_for_dataset(dataset_slug: str) -> str:
+    table = _DATASET_TABLE.get(dataset_slug, dataset_slug)
+    return curated_table_id(table)
+
 
 def _transfers_sql() -> str:
-    t = curated_table_id("transfers")
+    t = curated_table_for_dataset("transfers")
     return (
         f"SELECT\n"
         f"  mint,\n"
@@ -270,8 +283,8 @@ DATASETS: list[dict[str, Any]] = [
         "grain": "One row per token transfer",
         "category": "solana",
         "status": "available",
-        "curated_table": curated_table_id("transfers"),
-        "open_in_bigquery_url": bigquery_table_url("transfers"),
+        "curated_table": curated_table_for_dataset("transfers"),
+        "open_in_bigquery_url": bigquery_table_url("token_transfers"),
         "freshness": "Published by Analytic Sages curated pipeline",
         "coverage": "Solana mainnet token transfers in the published date range",
         "related_datasets": ["token_activity", "wallet_activity", "transactions"],
@@ -578,7 +591,7 @@ def get_lab(slug: str) -> dict[str, Any] | None:
         aliases = {item["id"], item["slug"], f"lab-{item['number']:02d}"}
         if needle in {a.lower() for a in aliases}:
             lab = dict(item)
-            lab["curated_table"] = curated_table_id(lab["dataset_slug"])
+            lab["curated_table"] = curated_table_for_dataset(lab["dataset_slug"])
             return lab
     return None
 

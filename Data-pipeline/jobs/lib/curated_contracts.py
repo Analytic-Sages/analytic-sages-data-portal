@@ -2,7 +2,7 @@
 
 Physical location (default):
   `{project}.solana_curated.{table}`
-  e.g. analytic-sages-data-portal.solana_curated.transfers
+  e.g. analytic-sages-data-portal.solana_curated.token_transfers
 
 Separate from lake/Iceberg dataset `solana` so curated learner tables
 are native BigQuery tables (TRUNCATE / DML friendly).
@@ -14,7 +14,7 @@ CURATED_DATASET = "solana_curated"
 
 # Columns learners see (order matters for docs + CREATE TABLE).
 CURATED_TABLES: dict[str, dict] = {
-    "transfers": {
+    "token_transfers": {
         "description": "One row per token transfer event.",
         "partition_field": "block_timestamp",
         "partition_type": "DAY",
@@ -120,7 +120,7 @@ SELECT
   COUNT(DISTINCT source) AS unique_senders,
   COUNT(DISTINCT destination) AS unique_receivers,
   CURRENT_TIMESTAMP() AS _published_at
-FROM `{project}.{dataset}.transfers`
+FROM `{project}.{dataset}.token_transfers`
 WHERE mint IS NOT NULL
 GROUP BY 1, 2
 """
@@ -132,11 +132,11 @@ CLUSTER BY wallet
 AS
 WITH unified AS (
   SELECT DATE(block_timestamp) AS block_date, source AS wallet, amount_ui, 'sent' AS direction
-  FROM `{project}.{dataset}.transfers`
+  FROM `{project}.{dataset}.token_transfers`
   WHERE source IS NOT NULL
   UNION ALL
   SELECT DATE(block_timestamp) AS block_date, destination AS wallet, amount_ui, 'received' AS direction
-  FROM `{project}.{dataset}.transfers`
+  FROM `{project}.{dataset}.token_transfers`
   WHERE destination IS NOT NULL
 )
 SELECT

@@ -73,7 +73,7 @@ uvicorn app.main:app --reload --port 8000
 
 Phase 1 curated tables (learner SQL uses short form):
 
-- `solana_curated.transfers`
+- `solana_curated.token_transfers`
 - `solana_curated.token_activity`
 - `solana_curated.wallet_activity`
 - `solana_curated.transactions`

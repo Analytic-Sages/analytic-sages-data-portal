@@ -5,7 +5,7 @@ Learners can run SQL inside the portal against curated BigQuery tables, with har
 ## Learner API
 
 - `GET /query/policy` – current limits
-- `POST /query/run` – `{ "sql": "SELECT ... FROM solana_curated.transfers ..." }`
+- `POST /query/run` – `{ "sql": "SELECT ... FROM solana_curated.token_transfers ..." }`
 
 ## Default limits (env)
 

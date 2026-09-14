@@ -10,23 +10,23 @@ Learner curated tables live in **`solana_curated`**, not the lake/Iceberg datase
 
 | Lake (engineers) | Curated (learners) |
 |------------------|--------------------|
-| `...solana.transfers` (Iceberg) | `...solana_curated.transfers` (native BQ) |
+| `...solana.transfers` (Iceberg) | `...solana_curated.token_transfers` (native BQ) |
 
 ## Learner SQL style
 
 With project `analytic-sages-data-portal` selected in BigQuery:
 
 ```sql
-FROM solana_curated.transfers
+FROM solana_curated.token_transfers
 ```
 
-Full path (ops only): `analytic-sages-data-portal.solana_curated.transfers`
+Full path (ops only): `analytic-sages-data-portal.solana_curated.token_transfers`
 
 ## Tables
 
 | Learner reference | Grain |
 |-------------------|-------|
-| `solana_curated.transfers` | One row per token transfer |
+| `solana_curated.token_transfers` | One row per token transfer |
 | `solana_curated.transactions` | One row per transaction |
 | `solana_curated.token_activity` | One row per token per day |
 | `solana_curated.wallet_activity` | One row per wallet per day |

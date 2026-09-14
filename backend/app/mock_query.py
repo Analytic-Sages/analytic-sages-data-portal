@@ -45,21 +45,21 @@ def mock_for_sql(sql: str, policy: QueryPolicy) -> dict[str, Any] | None:
         )
         return _payload(["peak_hour_volume"], [{"peak_hour_volume": round(peak, 2)}], policy, sql)
 
-    if "solana_curated.transfers" in s and "timestamp_trunc" in s and "transfer_volume" in s:
+    if "solana_curated.token_transfers" in s and "timestamp_trunc" in s and "transfer_volume" in s:
         data = [
             {"hour": h, "transfer_volume": round(120_000 + 35_000 * math.sin(i / 3) + (i % 4) * 5_000, 2)}
             for i, h in enumerate(_hourly_timestamps(48))
         ]
         return _payload(["hour", "transfer_volume"], data, policy, sql)
 
-    if "solana_curated.transfers" in s and "timestamp_trunc" in s and "transfer_count" in s:
+    if "solana_curated.token_transfers" in s and "timestamp_trunc" in s and "transfer_count" in s:
         data = [
             {"hour": h, "transfer_count": int(900 + 180 * math.sin(i / 2.5) + (i % 3) * 40)}
             for i, h in enumerate(_hourly_timestamps(48))
         ]
         return _payload(["hour", "transfer_count"], data, policy, sql)
 
-    if "solana_curated.transfers" in s and "group by mint" in s:
+    if "solana_curated.token_transfers" in s and "group by mint" in s:
         tokens = [
             (USDC, 2_450_000),
             (SOL, 1_820_000),
@@ -106,7 +106,7 @@ def mock_for_sql(sql: str, policy: QueryPolicy) -> dict[str, Any] | None:
         return _payload(["wallet", "received_volume"], data, policy, sql)
 
     # Generic transfers fallback (labs starter SQL)
-    if "solana_curated.transfers" in s:
+    if "solana_curated.token_transfers" in s:
         end = policy.window()[1]
         data = [
             {

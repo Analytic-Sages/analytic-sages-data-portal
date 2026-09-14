@@ -49,7 +49,7 @@ def validate_sql(sql: str, policy: QueryPolicy | None = None) -> str:
     refs = TABLE_REF.findall(cleaned)
     if not refs:
         raise QueryGuardError(
-            f"Query must reference an allowed table like {policy.allowed_dataset}.transfers"
+            f"Query must reference an allowed table like {policy.allowed_dataset}.token_transfers"
         )
     allowed = {f"{policy.allowed_dataset}.{t}" for t in policy.allowed_tables}
     for _project, dataset, table in refs:

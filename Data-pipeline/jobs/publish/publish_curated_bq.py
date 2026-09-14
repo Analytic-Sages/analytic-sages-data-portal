@@ -1,7 +1,7 @@
 """Publish Analytic Sages curated Solana tables to BigQuery.
 
 Learner-facing tables (native BigQuery, not Iceberg):
-  {project}.solana_curated.transfers
+  {project}.solana_curated.token_transfers
   {project}.solana_curated.transactions
   {project}.solana_curated.token_activity
   {project}.solana_curated.wallet_activity
@@ -94,7 +94,7 @@ def recreate_native_tables(client, project: str, dataset: str, tables: tuple[str
 
 
 def ensure_base_tables(client, project: str, dataset: str) -> None:
-    recreate_native_tables(client, project, dataset, ("transfers", "transactions"))
+    recreate_native_tables(client, project, dataset, ("token_transfers", "transactions"))
 
 
 def build_activity_marts(client, project: str, dataset: str) -> None:
@@ -163,13 +163,13 @@ def seed_sample(client, project: str, dataset: str) -> None:
         )
 
     # Fresh native tables (no TRUNCATE; avoids Iceberg DML limits)
-    recreate_native_tables(client, project, dataset, ("transfers", "transactions"))
+    recreate_native_tables(client, project, dataset, ("token_transfers", "transactions"))
 
-    t_ref = client.dataset(dataset).table("transfers")
+    t_ref = client.dataset(dataset).table("token_transfers")
     errors = client.insert_rows_json(t_ref, transfers)
     if errors:
-        raise RuntimeError(f"transfers insert errors: {errors[:3]}")
-    print(f"Seeded transfers rows={len(transfers)}")
+        raise RuntimeError(f"token_transfers insert errors: {errors[:3]}")
+    print(f"Seeded token_transfers rows={len(transfers)}")
 
     x_ref = client.dataset(dataset).table("transactions")
     errors = client.insert_rows_json(x_ref, transactions)
@@ -224,7 +224,7 @@ def load_from_gcs(
 
         if logical == "transfers":
             transform = f"""
-            INSERT INTO `{project}.{dataset}.transfers`
+            INSERT INTO `{project}.{dataset}.token_transfers`
             SELECT
               CAST(COALESCE(block_slot, slot) AS INT64) AS block_slot,
               CAST(block_timestamp AS TIMESTAMP) AS block_timestamp,
