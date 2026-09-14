@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -24,12 +25,24 @@ class AccessUpdate(BaseModel):
 @router.get("")
 def list_users(
     access_status: str | None = Query(default=None),
+    q: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> dict:
-    q = db.query(User).order_by(User.created_at.desc())
+    query = db.query(User).order_by(User.created_at.desc())
     if access_status:
-        q = q.filter(User.access_status == access_status)
-    users = q.limit(500).all()
+        query = query.filter(User.access_status == access_status)
+    if q:
+        like = f"%{q.strip().lower()}%"
+        query = query.filter(
+            or_(
+                User.email.ilike(like),
+                User.first_name.ilike(like),
+                User.last_name.ilike(like),
+                User.phone_number.ilike(like),
+                User.country_of_residence.ilike(like),
+            )
+        )
+    users = query.limit(500).all()
     return {"users": [u.to_public_dict() for u in users]}
 
 

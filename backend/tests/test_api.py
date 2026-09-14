@@ -53,10 +53,17 @@ client = TestClient(app)
 
 
 def _signup(email: str, password: str = "password123", **extra):
-    return client.post(
-        "/auth/signup",
-        json={"email": email, "password": password, "first_name": "T", "last_name": "U", **extra},
-    )
+    payload = {
+        "email": email,
+        "password": password,
+        "first_name": "T",
+        "last_name": "U",
+        "phone_country_code": "+234",
+        "phone_number": "8012345678",
+        "country_of_residence": "NG",
+        **extra,
+    }
+    return client.post("/auth/signup", json=payload)
 
 
 def _approve(user_id: str):
@@ -319,6 +326,8 @@ def test_private_access_mode_skips_waitlist(monkeypatch):
     assert user["access_status"] == "APPROVED"
     assert user["email_verified"] is True
     assert user["can_run_queries"] is True
+    assert user["phone_country_code"] == "+234"
+    assert user["country_of_residence"] == "NG"
     allowed = client.post(
         "/query/run",
         json={
@@ -334,6 +343,14 @@ def test_private_access_mode_skips_waitlist(monkeypatch):
     assert cfg.status_code == 200
     assert cfg.json()["private_access_mode"] is True
     assert cfg.json()["waitlist_enabled"] is False
+    analytics = client.get(
+        "/admin/analytics/summary",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+    )
+    assert analytics.status_code == 200
+    body = analytics.json()
+    assert body["users"]["total"] >= 1
+    assert body["queries"]["total"] >= 1
 
 
 def test_admin_policy_update(monkeypatch, tmp_path):

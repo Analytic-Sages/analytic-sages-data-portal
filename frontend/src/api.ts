@@ -90,6 +90,9 @@ export const api = {
     password: string
     first_name?: string
     last_name?: string
+    phone_country_code: string
+    phone_number: string
+    country_of_residence: string
   }) => send<{ user: AuthUser }>('/auth/signup', 'POST', body),
   login: (body: { email: string; password: string }) =>
     send<{ user: AuthUser }>('/auth/login', 'POST', body),
@@ -100,6 +103,33 @@ export const api = {
   resetPassword: (token: string, password: string) =>
     send<{ status: string }>('/auth/reset-password', 'POST', { token, password }),
   resendVerification: () => send<{ status: string }>('/auth/resend-verification', 'POST'),
+  adminAnalytics: (adminKey: string, days = 30) =>
+    request<import('./types/auth').AdminAnalyticsSummary>(`/admin/analytics/summary?days=${days}`, {
+      headers: { 'X-Admin-Key': adminKey },
+    }),
+  adminUsers: (adminKey: string, params?: { access_status?: string; q?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.access_status) qs.set('access_status', params.access_status)
+    if (params?.q) qs.set('q', params.q)
+    const suffix = qs.toString() ? `?${qs}` : ''
+    return request<{ users: AuthUser[] }>(`/admin/users${suffix}`, {
+      headers: { 'X-Admin-Key': adminKey },
+    })
+  },
+  adminApproveUser: (adminKey: string, userId: string) =>
+    request<{ user: AuthUser }>(`/admin/users/${userId}/approve`, {
+      method: 'POST',
+      headers: { 'X-Admin-Key': adminKey },
+    }),
+  adminSuspendUser: (adminKey: string, userId: string) =>
+    request<{ user: AuthUser }>(`/admin/users/${userId}/suspend`, {
+      method: 'POST',
+      headers: { 'X-Admin-Key': adminKey },
+    }),
+  adminQueryPolicy: (adminKey: string) =>
+    request<QueryPolicy>('/admin/query-policy', {
+      headers: { 'X-Admin-Key': adminKey },
+    }),
   studioDashboards: () => get<StudioDashboardsResponse>('/studio/dashboards'),
   studioDashboard: (slug: string) => get<StudioDashboardDetail>(`/studio/dashboards/${slug}`),
   createStudioDashboard: (body: {

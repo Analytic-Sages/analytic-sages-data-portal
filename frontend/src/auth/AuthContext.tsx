@@ -25,6 +25,9 @@ type AuthContextValue = {
     password: string
     first_name?: string
     last_name?: string
+    phone_country_code: string
+    phone_number: string
+    country_of_residence: string
   }) => Promise<AuthUser>
   logout: () => Promise<void>
   verifyEmail: (token: string) => Promise<AuthUser>
@@ -58,7 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signup = useCallback(
-    async (input: { email: string; password: string; first_name?: string; last_name?: string }) => {
+    async (input: {
+      email: string
+      password: string
+      first_name?: string
+      last_name?: string
+      phone_country_code: string
+      phone_number: string
+      country_of_residence: string
+    }) => {
       const res = await api.signup(input)
       setUser(res.user)
       return res.user

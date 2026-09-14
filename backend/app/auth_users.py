@@ -203,6 +203,9 @@ def create_user(
     password: str,
     first_name: str,
     last_name: str,
+    phone_country_code: str = "",
+    phone_number: str = "",
+    country_of_residence: str = "",
 ) -> User:
     email_norm = email.strip().lower()
     user = User(
@@ -211,6 +214,9 @@ def create_user(
         password_hash=hash_password(password),
         first_name=first_name.strip(),
         last_name=last_name.strip(),
+        phone_country_code=phone_country_code.strip(),
+        phone_number=phone_number.strip(),
+        country_of_residence=country_of_residence.strip().upper()[:2],
         email_verified=False,
         access_status=ACCESS_WAITLIST_PENDING,
         is_tester=False,

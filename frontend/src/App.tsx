@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { AdminPage } from './pages/AdminPage'
 import { CatalogPage } from './pages/CatalogPage'
 import { DashboardDetailPage } from './pages/DashboardDetailPage'
 import { DashboardsPage } from './pages/DashboardsPage'
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="verify-email" element={<VerifyEmailPage />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
         <Route path="reset-password" element={<ResetPasswordPage />} />
+        <Route path="admin" element={<AdminPage />} />
         <Route path="charts" element={<Navigate to="/dashboards" replace />} />
         <Route path="library" element={<Navigate to="/visualizations" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

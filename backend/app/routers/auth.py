@@ -34,6 +34,9 @@ class SignupBody(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     first_name: str = Field(default="", max_length=100)
     last_name: str = Field(default="", max_length=100)
+    phone_country_code: str = Field(min_length=1, max_length=8)
+    phone_number: str = Field(min_length=4, max_length=32)
+    country_of_residence: str = Field(min_length=2, max_length=2)
 
 
 class LoginBody(BaseModel):
@@ -71,12 +74,30 @@ def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) 
             status_code=status.HTTP_409_CONFLICT,
             detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
         )
+    phone_digits = "".join(ch for ch in body.phone_number if ch.isdigit())
+    if len(phone_digits) < 4:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_PHONE", "message": "Enter a valid phone number."},
+        )
+    code = body.phone_country_code.strip()
+    if not code.startswith("+"):
+        code = f"+{code}"
+    country = body.country_of_residence.strip().upper()
+    if len(country) != 2 or not country.isalpha():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_COUNTRY", "message": "Select a valid country of residence."},
+        )
     user = create_user(
         db,
         email=email,
         password=body.password,
         first_name=body.first_name,
         last_name=body.last_name,
+        phone_country_code=code,
+        phone_number=phone_digits,
+        country_of_residence=country,
     )
     if not user.email_verified:
         raw = create_email_token(db, user, "verify", hours=48)

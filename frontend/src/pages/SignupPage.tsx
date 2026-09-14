@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { accessErrorMessage, useAuth } from '../auth/AuthContext'
+import { COUNTRIES } from '../data/countries'
 
 export function SignupPage() {
   const { signup, state } = useAuth()
@@ -9,11 +10,25 @@ export function SignupPage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [residence, setResidence] = useState('NG')
+  const [dialCode, setDialCode] = useState('+234')
+  const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const residenceCountry = useMemo(
+    () => COUNTRIES.find((c) => c.code === residence) ?? COUNTRIES[0],
+    [residence],
+  )
+
   if (state === 'approved') {
     return <Navigate to="/query" replace />
+  }
+
+  function onResidenceChange(code: string) {
+    setResidence(code)
+    const match = COUNTRIES.find((c) => c.code === code)
+    if (match && match.dial !== '+') setDialCode(match.dial)
   }
 
   async function onSubmit(e: FormEvent) {
@@ -26,6 +41,9 @@ export function SignupPage() {
         password,
         first_name: firstName,
         last_name: lastName,
+        phone_country_code: dialCode,
+        phone_number: phone,
+        country_of_residence: residenceCountry.code === 'XX' ? 'XX' : residence,
       })
       navigate(user.can_run_queries ? '/query' : '/early-access')
     } catch (err) {
@@ -61,6 +79,45 @@ export function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+        </label>
+        <label>
+          Country of residence
+          <select value={residence} onChange={(e) => onResidenceChange(e.target.value)} required>
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Phone number
+          <div className="phone-row">
+            <select
+              aria-label="Country calling code"
+              value={dialCode}
+              onChange={(e) => setDialCode(e.target.value)}
+              required
+            >
+              {[...new Map(COUNTRIES.map((c) => [c.dial, c])).values()]
+                .filter((c) => c.dial !== '+')
+                .map((c) => (
+                  <option key={`${c.code}-${c.dial}`} value={c.dial}>
+                    {c.dial} ({c.code})
+                  </option>
+                ))}
+            </select>
+            <input
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              placeholder="Phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              minLength={4}
+              required
+            />
+          </div>
         </label>
         <label>
           Password

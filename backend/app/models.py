@@ -1,10 +1,10 @@
-"""ORM models for users, sessions, and email tokens."""
+"""ORM models for users, sessions, email tokens, and query analytics."""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -26,6 +26,9 @@ class User(Base):
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     first_name: Mapped[str] = mapped_column(String(100), default="")
     last_name: Mapped[str] = mapped_column(String(100), default="")
+    phone_country_code: Mapped[str] = mapped_column(String(8), default="")
+    phone_number: Mapped[str] = mapped_column(String(32), default="")
+    country_of_residence: Mapped[str] = mapped_column(String(2), default="")
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     access_status: Mapped[str] = mapped_column(String(32), default=ACCESS_WAITLIST_PENDING, index=True)
     is_tester: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -37,6 +40,7 @@ class User(Base):
 
     sessions: Mapped[list[SessionToken]] = relationship(back_populates="user", cascade="all, delete-orphan")
     email_tokens: Mapped[list[EmailToken]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    query_events: Mapped[list[QueryEvent]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
     def can_run_queries(self) -> bool:
         if self.access_status == ACCESS_SUSPENDED:
@@ -51,11 +55,15 @@ class User(Base):
             "email": self.email,
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "phone_country_code": self.phone_country_code,
+            "phone_number": self.phone_number,
+            "country_of_residence": self.country_of_residence,
             "email_verified": self.email_verified,
             "access_status": self.access_status,
             "is_tester": self.is_tester,
             "can_run_queries": self.can_run_queries(),
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "approved_at": self.approved_at.isoformat() if self.approved_at else None,
         }
 
 
@@ -83,3 +91,20 @@ class EmailToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     user: Mapped[User] = relationship(back_populates="email_tokens")
+
+
+class QueryEvent(Base):
+    __tablename__ = "query_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), index=True, nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, default=False)
+    mode: Mapped[str] = mapped_column(String(16), default="")  # live | mock | error
+    bytes_billed: Mapped[int] = mapped_column(BigInteger, default=0)
+    bytes_processed: Mapped[int] = mapped_column(BigInteger, default=0)
+    row_count: Mapped[int] = mapped_column(Integer, default=0)
+    error_code: Mapped[str] = mapped_column(String(64), default="")
+    sql_preview: Mapped[str] = mapped_column(String(240), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, index=True)
+
+    user: Mapped[User | None] = relationship(back_populates="query_events")

@@ -6,11 +6,14 @@ import os
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from app.auth import require_key
 from app.auth_users import require_query_access
 from app.bq_runner import QueryGuardError, run_learner_query
+from app.db import get_db
 from app.models import User
+from app.query_events import log_query_event
 from app.query_policy import load_policy, update_policy_from_dict
 
 router = APIRouter(tags=["query"])
@@ -53,13 +56,41 @@ def query_policy() -> dict:
 @router.post("/query/run", dependencies=[Depends(require_key)])
 def query_run(
     body: RunQueryRequest,
-    _user: User = Depends(require_query_access),
+    user: User = Depends(require_query_access),
+    db: Session = Depends(get_db),
 ) -> dict:
     try:
-        return run_learner_query(body.sql)
+        result = run_learner_query(body.sql)
+        log_query_event(
+            db,
+            user_id=user.id,
+            success=True,
+            mode=str(result.get("mode") or "live"),
+            bytes_billed=int(result.get("bytes_billed") or 0),
+            bytes_processed=int(result.get("bytes_processed") or 0),
+            row_count=int(result.get("row_count") or 0),
+            sql=body.sql,
+        )
+        return result
     except QueryGuardError as exc:
+        log_query_event(
+            db,
+            user_id=user.id,
+            success=False,
+            mode="error",
+            error_code="QUERY_GUARD",
+            sql=body.sql,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001 - surface BQ errors cleanly to learners
+        log_query_event(
+            db,
+            user_id=user.id,
+            success=False,
+            mode="error",
+            error_code="BQ_FAILED",
+            sql=body.sql,
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"BigQuery query failed: {exc}",

@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from app.config import get_settings
 from app.db import init_db
 from app.routers import (
+    admin_analytics,
     admin_users,
     auth,
     dashboards,
@@ -55,6 +56,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(admin_users.router)
+app.include_router(admin_analytics.router)
 app.include_router(datasets.router)
 app.include_router(labs.router)
 app.include_router(query.router)
@@ -79,4 +81,5 @@ def root() -> dict:
         "learning_journey": "/learning-journey",
         "auth": "/auth/me",
         "admin_users": "/admin/users",
+        "admin_analytics": "/admin/analytics/summary",
     }
