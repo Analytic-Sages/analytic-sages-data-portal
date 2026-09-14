@@ -623,6 +623,26 @@ def test_rows_to_payload_prefers_result_schema():
     assert data == [{"mint": "abc", "amount": 1.5}]
 
 
+def test_friendly_query_error_strips_bq_noise():
+    from app.bq_runner import friendly_query_error
+
+    raw = (
+        "400 POST https://bigquery.googleapis.com/bigquery/v2/projects/"
+        "analytic-sages-data-portal/jobs?prettyPrint=false: "
+        "Unrecognized name: amount_ui at [5:9] Location: None "
+        "Job ID: 5467fc93-63bf-450e-a201-8bf2da56fe83"
+    )
+    msg = friendly_query_error(Exception(raw))
+    assert "amount_ui" in msg
+    assert "Unknown column" in msg
+    assert "bigquery.googleapis.com" not in msg
+    assert "Job ID" not in msg
+
+    syntax = friendly_query_error(Exception("400 POST https://example.com/x: Syntax error: Unexpected keyword"))
+    assert "syntax" in syntax.lower()
+    assert "https://" not in syntax
+
+
 def test_admin_invite_grants_access_on_signup():
     created = client.post(
         "/admin/invites",

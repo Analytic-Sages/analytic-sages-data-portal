@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from app.auth import require_key
 from app.auth_users import require_query_access
-from app.bq_runner import QueryGuardError, run_learner_query
+from app.bq_runner import QueryGuardError, friendly_query_error, run_learner_query
 from app.models import User
 from app import showcase, studio_store as store
 
@@ -230,7 +230,7 @@ def featured_run(body: PublicRunIn) -> dict:
     except QueryGuardError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=f"Query failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail=friendly_query_error(exc)) from exc
 
 
 @router.get("/public/dashboards/{token}")
@@ -256,4 +256,4 @@ def public_run(token: str, body: PublicRunIn) -> dict:
     except QueryGuardError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=f"Query failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail=friendly_query_error(exc)) from exc

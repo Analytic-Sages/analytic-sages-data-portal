@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import require_key
 from app.auth_users import require_admin, require_query_access
-from app.bq_runner import QueryGuardError, run_learner_query
+from app.bq_runner import QueryGuardError, friendly_query_error, run_learner_query
 from app.db import get_db
 from app.models import User
 from app.query_events import log_query_event
@@ -77,7 +77,7 @@ def query_run(
         )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"BigQuery query failed: {exc}",
+            detail=friendly_query_error(exc),
         ) from exc
 
 

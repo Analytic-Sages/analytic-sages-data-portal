@@ -30,6 +30,85 @@ class QueryGuardError(ValueError):
     pass
 
 
+def friendly_query_error(exc: BaseException) -> str:
+    """Turn raw BigQuery / Google API errors into learner-friendly messages."""
+    raw = str(exc).strip()
+    if not raw:
+        return "Something went wrong running your query. Check the SQL and try again."
+
+    # Drop Google transport noise: "400 POST https://...: <message>"
+    cleaned = re.sub(
+        r"^\d{3}\s+POST\s+https?://\S+:\s*",
+        "",
+        raw,
+        flags=re.IGNORECASE,
+    ).strip()
+    cleaned = re.sub(r"\s*Location:\s*\S+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*Job ID:\s*\S+", "", cleaned, flags=re.IGNORECASE).strip()
+    # Sometimes the useful bit is after the last ": " following a URL
+    if "bigquery.googleapis.com" in cleaned.lower():
+        parts = cleaned.split(": ")
+        if len(parts) >= 2:
+            cleaned = parts[-1].strip()
+
+    patterns: list[tuple[str, str]] = [
+        (
+            r"Unrecognized name:\s*`?([A-Za-z_][A-Za-z0-9_]*)`?",
+            "Unknown column `{name}`. Open the dataset catalog for valid column names "
+            "(for token transfers, use `value` and `decimals`, not `amount_ui`).",
+        ),
+        (
+            r"Name\s+([A-Za-z_][A-Za-z0-9_]*)\s+not found inside",
+            "Unknown column `{name}`. Check spelling against the catalog schema.",
+        ),
+        (
+            r"(?:Not found: Table|Table .+ was not found|Dataset .+ was not found)",
+            "That table or dataset was not found. Use an allowed table like "
+            "`solana_curated.token_transfers` or `solana_curated.transactions`.",
+        ),
+        (
+            r"Syntax error",
+            "SQL syntax error. Check commas, quotes, and parentheses, then try again.",
+        ),
+        (
+            r"Resources exceeded|Query exceeded|timeout|DeadlineExceeded|timed out",
+            "The query took too long or used too many resources. Narrow the date range "
+            "or simplify the SQL.",
+        ),
+        (
+            r"bytes billed|maximumBytesBilled|Query exceeded QueryJobConfig",
+            "This query would scan too much data for the learning sandbox. "
+            "Add a tighter date filter or reduce the scope.",
+        ),
+        (
+            r"Access Denied|Permission denied|403 Forbidden",
+            "The portal could not access BigQuery with the current credentials. "
+            "Ask an admin to check the service account.",
+        ),
+        (
+            r"Invalid query|BadRequest",
+            "BigQuery rejected this SQL. Review the query against the catalog examples.",
+        ),
+    ]
+
+    for pattern, template in patterns:
+        match = re.search(pattern, cleaned, re.IGNORECASE)
+        if match:
+            name = match.group(1) if match.lastindex else ""
+            try:
+                return template.format(name=name)
+            except (KeyError, IndexError):
+                return template
+
+    # Prefer a short reason if we still have a readable remnant
+    if cleaned and "http" not in cleaned.lower() and len(cleaned) < 240:
+        return f"Query failed: {cleaned}"
+    return (
+        "Something went wrong running your query. "
+        "Check table and column names in the catalog, then try again."
+    )
+
+
 def validate_sql(sql: str, policy: QueryPolicy | None = None) -> str:
     policy = policy or load_policy()
     cleaned = sql.strip().rstrip(";").strip()
