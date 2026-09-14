@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text
@@ -12,6 +13,10 @@ from app.db import Base
 ACCESS_WAITLIST_PENDING = "WAITLIST_PENDING"
 ACCESS_APPROVED = "APPROVED"
 ACCESS_SUSPENDED = "SUSPENDED"
+
+INVITE_PENDING = "PENDING"
+INVITE_ACCEPTED = "ACCEPTED"
+INVITE_REVOKED = "REVOKED"
 
 
 def _now() -> datetime:
@@ -61,6 +66,12 @@ class User(Base):
             "email_verified": self.email_verified,
             "access_status": self.access_status,
             "is_tester": self.is_tester,
+            "is_admin": self.email.lower()
+            in {
+                e.strip().lower()
+                for e in os.environ.get("ADMIN_EMAILS", "").split(",")
+                if e.strip()
+            },
             "can_run_queries": self.can_run_queries(),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "approved_at": self.approved_at.isoformat() if self.approved_at else None,
@@ -91,6 +102,39 @@ class EmailToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     user: Mapped[User] = relationship(back_populates="email_tokens")
+
+
+class Invite(Base):
+    """Admin-issued email invite that grants Query Studio access on signup/login."""
+
+    __tablename__ = "invites"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    email: Mapped[str] = mapped_column(String(320), index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default=INVITE_PENDING, index=True)
+    note: Mapped[str] = mapped_column(String(500), default="")
+    invited_by: Mapped[str] = mapped_column(String(120), default="admin")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    accepted_user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True)
+
+    def to_public_dict(self, *, invite_url: str | None = None) -> dict:
+        payload = {
+            "id": self.id,
+            "email": self.email,
+            "status": self.status,
+            "note": self.note,
+            "invited_by": self.invited_by,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "accepted_at": self.accepted_at.isoformat() if self.accepted_at else None,
+            "accepted_user_id": self.accepted_user_id,
+        }
+        if invite_url is not None:
+            payload["invite_url"] = invite_url
+        return payload
 
 
 class QueryEvent(Base):

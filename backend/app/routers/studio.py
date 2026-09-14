@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.auth import require_key
+from app.auth_users import require_query_access
 from app.bq_runner import QueryGuardError, run_learner_query
+from app.models import User
 from app import showcase, studio_store as store
 
 router = APIRouter(tags=["studio"])
@@ -69,13 +71,20 @@ class PublicRunIn(BaseModel):
 
 
 @router.get("/studio/visualizations", dependencies=[Depends(require_key)])
-def list_visualizations() -> dict:
-    items = store.list_visualizations()
-    return {"visualizations": [v.to_dict() for v in items], "chart_types": list(store.CHART_TYPES), "default_style": store.DEFAULT_STYLE}
+def list_visualizations(user: User = Depends(require_query_access)) -> dict:
+    items = store.list_visualizations(user.id)
+    return {
+        "visualizations": [v.to_dict() for v in items],
+        "chart_types": list(store.CHART_TYPES),
+        "default_style": store.DEFAULT_STYLE,
+    }
 
 
 @router.post("/studio/visualizations", dependencies=[Depends(require_key)])
-def create_visualization(body: VisualizationIn) -> dict:
+def create_visualization(
+    body: VisualizationIn,
+    user: User = Depends(require_query_access),
+) -> dict:
     try:
         viz = store.create_visualization(
             title=body.title,
@@ -85,6 +94,7 @@ def create_visualization(body: VisualizationIn) -> dict:
             y_axis=body.y_axis,
             description=body.description,
             style=body.style.model_dump(exclude_none=True) if body.style else None,
+            owner_user_id=user.id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
@@ -92,26 +102,26 @@ def create_visualization(body: VisualizationIn) -> dict:
 
 
 @router.get("/studio/visualizations/{viz_id}", dependencies=[Depends(require_key)])
-def get_visualization(viz_id: str) -> dict:
-    viz = store.get_visualization(viz_id)
+def get_visualization(viz_id: str, user: User = Depends(require_query_access)) -> dict:
+    viz = store.get_visualization(viz_id, owner_user_id=user.id)
     if viz is None:
         raise HTTPException(status_code=404, detail="Visualization not found")
     return {"visualization": viz.to_dict()}
 
 
 @router.delete("/studio/visualizations/{viz_id}", dependencies=[Depends(require_key)])
-def delete_visualization(viz_id: str) -> dict:
-    if not store.delete_visualization(viz_id):
+def delete_visualization(viz_id: str, user: User = Depends(require_query_access)) -> dict:
+    if not store.delete_visualization(viz_id, owner_user_id=user.id):
         raise HTTPException(status_code=404, detail="Visualization not found")
     return {"status": "ok"}
 
 
 @router.get("/studio/dashboards", dependencies=[Depends(require_key)])
-def list_dashboards() -> dict:
-    items = store.list_dashboards()
+def list_dashboards(user: User = Depends(require_query_access)) -> dict:
+    items = store.list_dashboards(user.id)
     return {
         "note": (
-            "Native Analytic Sages dashboards with drag/resize layout and optional public share links. "
+            "Your Analytic Sages dashboards only. Drag/resize layout and optional public share links. "
             "Charts render in-browser with ECharts."
         ),
         "dashboards": [d.to_dict() for d in items],
@@ -119,13 +129,14 @@ def list_dashboards() -> dict:
 
 
 @router.post("/studio/dashboards", dependencies=[Depends(require_key)])
-def create_dashboard(body: DashboardIn) -> dict:
+def create_dashboard(body: DashboardIn, user: User = Depends(require_query_access)) -> dict:
     try:
         board = store.create_dashboard(
             title=body.title,
             description=body.description,
             visualization_ids=body.visualization_ids,
             slug=body.slug,
+            owner_user_id=user.id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
@@ -133,18 +144,23 @@ def create_dashboard(body: DashboardIn) -> dict:
 
 
 @router.get("/studio/dashboards/{slug}", dependencies=[Depends(require_key)])
-def dashboard_detail(slug: str) -> dict:
-    detail = store.dashboard_detail(slug)
+def dashboard_detail(slug: str, user: User = Depends(require_query_access)) -> dict:
+    detail = store.dashboard_detail(slug, owner_user_id=user.id)
     if detail is None:
         raise HTTPException(status_code=404, detail="Dashboard not found")
     return detail
 
 
 @router.put("/studio/dashboards/{slug}", dependencies=[Depends(require_key)])
-def update_dashboard(slug: str, body: DashboardUpdate) -> dict:
+def update_dashboard(
+    slug: str,
+    body: DashboardUpdate,
+    user: User = Depends(require_query_access),
+) -> dict:
     try:
         board = store.update_dashboard(
             slug,
+            owner_user_id=user.id,
             title=body.title,
             description=body.description,
             visualization_ids=body.visualization_ids,
@@ -157,9 +173,17 @@ def update_dashboard(slug: str, body: DashboardUpdate) -> dict:
 
 
 @router.post("/studio/dashboards/{slug}/visualizations", dependencies=[Depends(require_key)])
-def add_visualization(slug: str, body: AddVizIn) -> dict:
+def add_visualization(
+    slug: str,
+    body: AddVizIn,
+    user: User = Depends(require_query_access),
+) -> dict:
     try:
-        board = store.add_viz_to_dashboard(slug, body.visualization_id)
+        board = store.add_viz_to_dashboard(
+            slug,
+            body.visualization_id,
+            owner_user_id=user.id,
+        )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Dashboard not found") from exc
     except ValueError as exc:
@@ -168,17 +192,21 @@ def add_visualization(slug: str, body: AddVizIn) -> dict:
 
 
 @router.post("/studio/dashboards/{slug}/share", dependencies=[Depends(require_key)])
-def share_dashboard(slug: str, body: ShareIn) -> dict:
+def share_dashboard(
+    slug: str,
+    body: ShareIn,
+    user: User = Depends(require_query_access),
+) -> dict:
     try:
-        board = store.set_share(slug, enabled=body.enabled)
+        board = store.set_share(slug, enabled=body.enabled, owner_user_id=user.id)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Dashboard not found") from exc
     return {"dashboard": board.to_dict()}
 
 
 @router.delete("/studio/dashboards/{slug}", dependencies=[Depends(require_key)])
-def delete_dashboard(slug: str) -> dict:
-    if not store.delete_dashboard(slug):
+def delete_dashboard(slug: str, user: User = Depends(require_query_access)) -> dict:
+    if not store.delete_dashboard(slug, owner_user_id=user.id):
         raise HTTPException(status_code=404, detail="Dashboard not found")
     return {"status": "ok"}
 

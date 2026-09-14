@@ -132,6 +132,16 @@ def ensure_showcase() -> store.StudioDashboard | None:
     """Create the featured showcase dashboard if it does not exist."""
     existing = store.get_dashboard(SHOWCASE_SLUG)
     if existing is not None:
+        if existing.owner_user_id != store.SYSTEM_OWNER:
+            data = store.load_store()
+            for board in data.dashboards:
+                if board.slug == SHOWCASE_SLUG:
+                    board.owner_user_id = store.SYSTEM_OWNER
+            for viz in data.visualizations:
+                if viz.id in existing.visualization_ids:
+                    viz.owner_user_id = store.SYSTEM_OWNER
+            store.save_store(data)
+            existing = store.get_dashboard(SHOWCASE_SLUG)
         return existing
 
     data = store.load_store()
@@ -148,6 +158,7 @@ def ensure_showcase() -> store.StudioDashboard | None:
             y_axis=spec["y_axis"],
             description="Analytic Sages homepage showcase",
             style=store.parse_style(None),
+            owner_user_id=store.SYSTEM_OWNER,
             created_at=now,
             updated_at=now,
         )
@@ -165,6 +176,7 @@ def ensure_showcase() -> store.StudioDashboard | None:
         is_published=True,
         share_enabled=True,
         share_token="as-hourly-showcase",
+        owner_user_id=store.SYSTEM_OWNER,
         created_at=now,
         updated_at=now,
     )

@@ -2,6 +2,9 @@
 
 Persisted as JSON. Charts render in the browser via ECharts; this store only keeps
 SQL + chart config + board layout. Queries still go through the guarded BigQuery runner.
+
+Each visualization and dashboard is owned by a user (`owner_user_id`). Users only
+list/edit/delete their own resources. The homepage showcase uses SYSTEM_OWNER.
 """
 
 from __future__ import annotations
@@ -17,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 CHART_TYPES = ("line", "bar", "area", "pie", "scatter", "kpi")
+SYSTEM_OWNER = "__system__"
 _SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _HEX_RE = re.compile(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 GRID_COLS = 12
@@ -87,6 +91,7 @@ class Visualization:
     y_axis: str | None
     description: str = ""
     style: dict[str, Any] = field(default_factory=lambda: parse_style(None))
+    owner_user_id: str = ""
     created_at: str = ""
     updated_at: str = ""
 
@@ -122,6 +127,7 @@ class StudioDashboard:
     is_published: bool = True
     share_enabled: bool = False
     share_token: str | None = None
+    owner_user_id: str = ""
     created_at: str = ""
     updated_at: str = ""
 
@@ -140,13 +146,13 @@ class StudioDashboard:
             "share_path": (
                 f"/share/{self.share_token}" if self.share_enabled and self.share_token else None
             ),
+            "owner_user_id": self.owner_user_id,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
 
     def to_public_dict(self) -> dict:
         data = self.to_dict()
-        # Public viewers don't need the raw token management fields beyond path
         data.pop("share_token", None)
         return data
 
@@ -203,12 +209,9 @@ def _default_layout_for(viz_ids: list[str], existing: list[LayoutItem] | None = 
             cursor_y += DEFAULT_H
         y = cursor_y if idx % 2 == 0 else cursor_y
         if idx % 2 == 1:
-            # place on same row as previous
             prev = layout[-1] if layout else None
             y = prev.y if prev else cursor_y
-        layout.append(
-            LayoutItem(i=viz_id, x=x, y=y, w=DEFAULT_W, h=DEFAULT_H)
-        )
+        layout.append(LayoutItem(i=viz_id, x=x, y=y, w=DEFAULT_W, h=DEFAULT_H))
     return layout
 
 
@@ -233,6 +236,7 @@ def load_store() -> StudioStore:
                 y_axis=item.get("y_axis"),
                 description=str(item.get("description") or ""),
                 style=parse_style(item.get("style")),
+                owner_user_id=str(item.get("owner_user_id") or ""),
                 created_at=str(item.get("created_at") or ""),
                 updated_at=str(item.get("updated_at") or ""),
             )
@@ -255,6 +259,7 @@ def load_store() -> StudioStore:
                 is_published=bool(item.get("is_published", True)),
                 share_enabled=bool(item.get("share_enabled", False)),
                 share_token=(str(item["share_token"]) if item.get("share_token") else None),
+                owner_user_id=str(item.get("owner_user_id") or ""),
                 created_at=str(item.get("created_at") or ""),
                 updated_at=str(item.get("updated_at") or ""),
             )
@@ -265,7 +270,6 @@ def load_store() -> StudioStore:
 def save_store(store: StudioStore) -> StudioStore:
     path = studio_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    # Persist share_token even when disabled so re-enable can reuse; store raw boards
     payload = {
         "visualizations": [v.to_dict() for v in store.visualizations],
         "dashboards": [
@@ -280,6 +284,7 @@ def save_store(store: StudioStore) -> StudioStore:
                 "is_published": d.is_published,
                 "share_enabled": d.share_enabled,
                 "share_token": d.share_token,
+                "owner_user_id": d.owner_user_id,
                 "created_at": d.created_at,
                 "updated_at": d.updated_at,
             }
@@ -295,6 +300,10 @@ def _slugify(value: str) -> str:
     return s or f"dashboard-{uuid.uuid4().hex[:8]}"
 
 
+def _owned_viz_ids(store: StudioStore, owner_user_id: str) -> set[str]:
+    return {v.id for v in store.visualizations if v.owner_user_id == owner_user_id}
+
+
 def create_visualization(
     *,
     title: str,
@@ -304,7 +313,10 @@ def create_visualization(
     y_axis: str | None,
     description: str = "",
     style: dict | None = None,
+    owner_user_id: str,
 ) -> Visualization:
+    if not owner_user_id:
+        raise ValueError("owner_user_id is required")
     if chart_type not in CHART_TYPES:
         raise ValueError(f"chart_type must be one of {CHART_TYPES}")
     if not title.strip():
@@ -327,6 +339,7 @@ def create_visualization(
         y_axis=y_axis,
         description=description.strip(),
         style=parse_style(style),
+        owner_user_id=owner_user_id,
         created_at=now,
         updated_at=now,
     )
@@ -335,27 +348,33 @@ def create_visualization(
     return viz
 
 
-def list_visualizations() -> list[Visualization]:
-    return load_store().visualizations
+def list_visualizations(owner_user_id: str) -> list[Visualization]:
+    return [v for v in load_store().visualizations if v.owner_user_id == owner_user_id]
 
 
-def get_visualization(viz_id: str) -> Visualization | None:
+def get_visualization(viz_id: str, *, owner_user_id: str | None = None) -> Visualization | None:
     for item in load_store().visualizations:
         if item.id == viz_id:
+            if owner_user_id is not None and item.owner_user_id != owner_user_id:
+                return None
             return item
     return None
 
 
-def delete_visualization(viz_id: str) -> bool:
+def delete_visualization(viz_id: str, *, owner_user_id: str) -> bool:
     store = load_store()
-    before = len(store.visualizations)
+    target = next((v for v in store.visualizations if v.id == viz_id), None)
+    if target is None or target.owner_user_id != owner_user_id:
+        return False
+    if target.owner_user_id == SYSTEM_OWNER:
+        return False
     store.visualizations = [v for v in store.visualizations if v.id != viz_id]
     for board in store.dashboards:
+        if board.owner_user_id != owner_user_id:
+            continue
         board.visualization_ids = [x for x in board.visualization_ids if x != viz_id]
         board.layout = [item for item in board.layout if item.i != viz_id]
         board.updated_at = _now()
-    if len(store.visualizations) == before:
-        return False
     save_store(store)
     return True
 
@@ -366,13 +385,16 @@ def create_dashboard(
     description: str = "",
     visualization_ids: list[str] | None = None,
     slug: str | None = None,
+    owner_user_id: str,
 ) -> StudioDashboard:
+    if not owner_user_id:
+        raise ValueError("owner_user_id is required")
     if not title.strip():
         raise ValueError("title is required")
     store = load_store()
     base = _slugify(slug or title)
     slug_final = base
-    existing = {d.slug for d in store.dashboards}
+    existing = {d.slug for d in store.dashboards if d.owner_user_id == owner_user_id}
     n = 2
     while slug_final in existing:
         slug_final = f"{base}-{n}"
@@ -380,7 +402,7 @@ def create_dashboard(
     if not _SLUG_RE.match(slug_final):
         raise ValueError(f"Invalid slug: {slug_final}")
 
-    known = {v.id for v in store.visualizations}
+    known = _owned_viz_ids(store, owner_user_id)
     ids = [x for x in (visualization_ids or []) if x in known]
     now = _now()
     board = StudioDashboard(
@@ -394,6 +416,7 @@ def create_dashboard(
         is_published=True,
         share_enabled=False,
         share_token=None,
+        owner_user_id=owner_user_id,
         created_at=now,
         updated_at=now,
     )
@@ -402,14 +425,16 @@ def create_dashboard(
     return board
 
 
-def list_dashboards() -> list[StudioDashboard]:
-    return load_store().dashboards
+def list_dashboards(owner_user_id: str) -> list[StudioDashboard]:
+    return [d for d in load_store().dashboards if d.owner_user_id == owner_user_id]
 
 
-def get_dashboard(slug: str) -> StudioDashboard | None:
+def get_dashboard(slug: str, *, owner_user_id: str | None = None) -> StudioDashboard | None:
     needle = slug.strip().lower()
     for item in load_store().dashboards:
         if item.slug == needle or item.id == needle:
+            if owner_user_id is not None and item.owner_user_id != owner_user_id:
+                return None
             return item
     return None
 
@@ -424,9 +449,17 @@ def get_dashboard_by_share_token(token: str) -> StudioDashboard | None:
     return None
 
 
+def _find_owned_board(store: StudioStore, slug: str, owner_user_id: str) -> StudioDashboard | None:
+    for item in store.dashboards:
+        if (item.slug == slug or item.id == slug) and item.owner_user_id == owner_user_id:
+            return item
+    return None
+
+
 def update_dashboard(
     slug: str,
     *,
+    owner_user_id: str,
     title: str | None = None,
     description: str | None = None,
     visualization_ids: list[str] | None = None,
@@ -434,11 +467,7 @@ def update_dashboard(
     theme: dict | None = None,
 ) -> StudioDashboard:
     store = load_store()
-    board = None
-    for item in store.dashboards:
-        if item.slug == slug or item.id == slug:
-            board = item
-            break
+    board = _find_owned_board(store, slug, owner_user_id)
     if board is None:
         raise KeyError(slug)
     if title is not None:
@@ -446,7 +475,7 @@ def update_dashboard(
     if description is not None:
         board.description = description.strip()
     if visualization_ids is not None:
-        known = {v.id for v in store.visualizations}
+        known = _owned_viz_ids(store, owner_user_id)
         board.visualization_ids = [x for x in visualization_ids if x in known]
         board.layout = _default_layout_for(board.visualization_ids, board.layout)
     if layout is not None:
@@ -460,15 +489,12 @@ def update_dashboard(
     return board
 
 
-def add_viz_to_dashboard(slug: str, viz_id: str) -> StudioDashboard:
+def add_viz_to_dashboard(slug: str, viz_id: str, *, owner_user_id: str) -> StudioDashboard:
     store = load_store()
-    if not any(v.id == viz_id for v in store.visualizations):
+    viz = next((v for v in store.visualizations if v.id == viz_id), None)
+    if viz is None or viz.owner_user_id != owner_user_id:
         raise ValueError("Visualization not found")
-    board = None
-    for item in store.dashboards:
-        if item.slug == slug or item.id == slug:
-            board = item
-            break
+    board = _find_owned_board(store, slug, owner_user_id)
     if board is None:
         raise KeyError(slug)
     if viz_id not in board.visualization_ids:
@@ -479,13 +505,9 @@ def add_viz_to_dashboard(slug: str, viz_id: str) -> StudioDashboard:
     return board
 
 
-def set_share(slug: str, *, enabled: bool) -> StudioDashboard:
+def set_share(slug: str, *, enabled: bool, owner_user_id: str) -> StudioDashboard:
     store = load_store()
-    board = None
-    for item in store.dashboards:
-        if item.slug == slug or item.id == slug:
-            board = item
-            break
+    board = _find_owned_board(store, slug, owner_user_id)
     if board is None:
         raise KeyError(slug)
     board.share_enabled = enabled
@@ -497,24 +519,25 @@ def set_share(slug: str, *, enabled: bool) -> StudioDashboard:
     return board
 
 
-def delete_dashboard(slug: str) -> bool:
+def delete_dashboard(slug: str, *, owner_user_id: str) -> bool:
     store = load_store()
-    before = len(store.dashboards)
-    store.dashboards = [d for d in store.dashboards if d.slug != slug and d.id != slug]
-    if len(store.dashboards) == before:
+    board = _find_owned_board(store, slug, owner_user_id)
+    if board is None:
         return False
+    if board.owner_user_id == SYSTEM_OWNER:
+        return False
+    store.dashboards = [d for d in store.dashboards if d.id != board.id]
     save_store(store)
     return True
 
 
-def dashboard_detail(slug: str) -> dict | None:
-    board = get_dashboard(slug)
+def dashboard_detail(slug: str, *, owner_user_id: str | None = None) -> dict | None:
+    board = get_dashboard(slug, owner_user_id=owner_user_id)
     if board is None:
         return None
     store = load_store()
     by_id = {v.id: v for v in store.visualizations}
     charts = [by_id[i].to_dict() for i in board.visualization_ids if i in by_id]
-    # Keep layout in sync with viz ids
     if len(board.layout) != len(board.visualization_ids) or {
         item.i for item in board.layout
     } != set(board.visualization_ids):

@@ -9,10 +9,10 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.auth_users import require_admin
 from app.db import get_db
 from app.models import QueryEvent, User
 from app.query_policy import load_policy
-from app.routers.query import require_admin
 from app.config import get_settings
 
 router = APIRouter(prefix="/admin/analytics", tags=["admin-analytics"], dependencies=[Depends(require_admin)])

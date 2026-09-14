@@ -48,6 +48,7 @@ class Settings:
         self.cors_origins = [o.strip() for o in origins.split(",") if o.strip()]
         self.database_url = os.environ.get("DATABASE_URL", "")
         self.approved_tester_emails = os.environ.get("APPROVED_TESTER_EMAILS", "")
+        self.admin_emails = os.environ.get("ADMIN_EMAILS", "")
         self.frontend_origin = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
         self.cookie_secure = os.environ.get("COOKIE_SECURE", "0").lower() in {
             "1",

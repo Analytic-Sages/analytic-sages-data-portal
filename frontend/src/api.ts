@@ -93,7 +93,9 @@ export const api = {
     phone_country_code: string
     phone_number: string
     country_of_residence: string
+    invite_token?: string
   }) => send<{ user: AuthUser }>('/auth/signup', 'POST', body),
+  peekInvite: (token: string) => get<{ email: string; expires_at: string | null }>(`/auth/invite/${token}`),
   login: (body: { email: string; password: string }) =>
     send<{ user: AuthUser }>('/auth/login', 'POST', body),
   logout: () => send<{ status: string }>('/auth/logout', 'POST'),
@@ -103,33 +105,46 @@ export const api = {
   resetPassword: (token: string, password: string) =>
     send<{ status: string }>('/auth/reset-password', 'POST', { token, password }),
   resendVerification: () => send<{ status: string }>('/auth/resend-verification', 'POST'),
-  adminAnalytics: (adminKey: string, days = 30) =>
-    request<import('./types/auth').AdminAnalyticsSummary>(`/admin/analytics/summary?days=${days}`, {
-      headers: { 'X-Admin-Key': adminKey },
-    }),
-  adminUsers: (adminKey: string, params?: { access_status?: string; q?: string }) => {
+  adminAnalytics: (days = 30) =>
+    request<import('./types/auth').AdminAnalyticsSummary>(`/admin/analytics/summary?days=${days}`),
+  adminUsers: (params?: { access_status?: string; q?: string }) => {
     const qs = new URLSearchParams()
     if (params?.access_status) qs.set('access_status', params.access_status)
     if (params?.q) qs.set('q', params.q)
     const suffix = qs.toString() ? `?${qs}` : ''
-    return request<{ users: AuthUser[] }>(`/admin/users${suffix}`, {
-      headers: { 'X-Admin-Key': adminKey },
-    })
+    return request<{ users: AuthUser[] }>(`/admin/users${suffix}`)
   },
-  adminApproveUser: (adminKey: string, userId: string) =>
-    request<{ user: AuthUser }>(`/admin/users/${userId}/approve`, {
+  adminApproveUser: (userId: string) =>
+    request<{ user: AuthUser }>(`/admin/users/${userId}/approve`, { method: 'POST' }),
+  adminSuspendUser: (userId: string) =>
+    request<{ user: AuthUser }>(`/admin/users/${userId}/suspend`, { method: 'POST' }),
+  adminInvites: (status?: string) => {
+    const suffix = status ? `?status=${encodeURIComponent(status)}` : ''
+    return request<{ invites: import('./types/auth').AdminInvite[] }>(`/admin/invites${suffix}`)
+  },
+  adminCreateInvite: (body: { email: string; note?: string; days?: number }) =>
+    request<{
+      invite: import('./types/auth').AdminInvite
+      invite_url: string
+      existing_user_approved: boolean
+      user: AuthUser | null
+    }>('/admin/invites', {
       method: 'POST',
-      headers: { 'X-Admin-Key': adminKey },
+      body: JSON.stringify(body),
     }),
-  adminSuspendUser: (adminKey: string, userId: string) =>
-    request<{ user: AuthUser }>(`/admin/users/${userId}/suspend`, {
+  adminRevokeInvite: (inviteId: string) =>
+    request<{ invite: import('./types/auth').AdminInvite }>(`/admin/invites/${inviteId}/revoke`, {
       method: 'POST',
-      headers: { 'X-Admin-Key': adminKey },
     }),
-  adminQueryPolicy: (adminKey: string) =>
-    request<QueryPolicy>('/admin/query-policy', {
-      headers: { 'X-Admin-Key': adminKey },
+  adminResendInvite: (inviteId: string) =>
+    request<{
+      invite: import('./types/auth').AdminInvite
+      invite_url: string
+      existing_user_approved: boolean
+    }>(`/admin/invites/${inviteId}/resend`, {
+      method: 'POST',
     }),
+  adminQueryPolicy: () => request<QueryPolicy>('/admin/query-policy'),
   studioDashboards: () => get<StudioDashboardsResponse>('/studio/dashboards'),
   studioDashboard: (slug: string) => get<StudioDashboardDetail>(`/studio/dashboards/${slug}`),
   createStudioDashboard: (body: {

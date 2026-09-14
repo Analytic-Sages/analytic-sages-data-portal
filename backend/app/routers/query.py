@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import os
-
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.auth import require_key
-from app.auth_users import require_query_access
+from app.auth_users import require_admin, require_query_access
 from app.bq_runner import QueryGuardError, run_learner_query
 from app.db import get_db
 from app.models import User
@@ -32,20 +30,6 @@ class AdminPolicyUpdate(BaseModel):
     allowed_dataset: str | None = None
     allowed_tables: list[str] | None = None
     note: str | None = None
-
-
-def require_admin(x_admin_key: str | None = Header(default=None, alias="X-Admin-Key")) -> None:
-    expected = os.environ.get("ADMIN_API_KEY", "")
-    if not expected:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="ADMIN_API_KEY is not configured on the server",
-        )
-    if x_admin_key != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing admin key",
-        )
 
 
 @router.get("/query/policy", dependencies=[Depends(require_key)])

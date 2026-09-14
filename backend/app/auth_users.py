@@ -9,7 +9,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import Cookie, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -57,6 +57,15 @@ def approved_tester_emails() -> set[str]:
     return {e.strip().lower() for e in raw.split(",") if e.strip()}
 
 
+def admin_emails() -> set[str]:
+    raw = os.environ.get("ADMIN_EMAILS", "")
+    return {e.strip().lower() for e in raw.split(",") if e.strip()}
+
+
+def user_is_admin(user: User) -> bool:
+    return user.email.lower() in admin_emails()
+
+
 def private_access_mode() -> bool:
     """When enabled, signed-in users skip the waitlist (private beta, no approval queue)."""
     return os.environ.get("PRIVATE_ACCESS_MODE", "1").lower() in {"1", "true", "yes"}
@@ -71,9 +80,24 @@ def apply_tester_seed(user: User) -> None:
         user.approved_by = "APPROVED_TESTER_EMAILS"
 
 
-def apply_access_policy(user: User) -> None:
-    """Apply tester allow-list and optional private (no-waitlist) access."""
+def apply_admin_seed(user: User) -> None:
+    if user_is_admin(user):
+        user.access_status = ACCESS_APPROVED
+        user.email_verified = True
+        if user.approved_at is None:
+            user.approved_at = datetime.now(timezone.utc)
+        if not user.approved_by:
+            user.approved_by = "ADMIN_EMAILS"
+
+
+def apply_access_policy(user: User, db: Session | None = None) -> None:
+    """Apply tester allow-list, pending invites, and optional private (no-waitlist) access."""
     apply_tester_seed(user)
+    apply_admin_seed(user)
+    if db is not None:
+        from app.invites import consume_invite_for_user
+
+        consume_invite_for_user(db, user)
     if private_access_mode() and user.access_status != "SUSPENDED":
         user.access_status = ACCESS_APPROVED
         user.email_verified = True
@@ -206,7 +230,10 @@ def create_user(
     phone_country_code: str = "",
     phone_number: str = "",
     country_of_residence: str = "",
+    invite_token: str | None = None,
 ) -> User:
+    from app.invites import consume_invite_for_user, find_invite_by_token, is_invite_active
+
     email_norm = email.strip().lower()
     user = User(
         id=str(uuid.uuid4()),
@@ -221,8 +248,63 @@ def create_user(
         access_status=ACCESS_WAITLIST_PENDING,
         is_tester=False,
     )
-    apply_access_policy(user)
+    apply_tester_seed(user)
+    apply_admin_seed(user)
+    if invite_token:
+        invite = find_invite_by_token(db, invite_token)
+        if invite is None or not is_invite_active(invite):
+            raise ValueError("INVALID_INVITE")
+        if invite.email.lower() != email_norm:
+            raise ValueError("INVITE_EMAIL_MISMATCH")
+        consume_invite_for_user(db, user, raw_token=invite_token)
+    else:
+        consume_invite_for_user(db, user)
+    if private_access_mode() and user.access_status != "SUSPENDED":
+        user.access_status = ACCESS_APPROVED
+        user.email_verified = True
+        if user.approved_at is None:
+            user.approved_at = datetime.now(timezone.utc)
+        if not user.approved_by:
+            user.approved_by = "PRIVATE_ACCESS_MODE"
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
+
+
+def require_admin(
+    request: Request,
+    db: Session = Depends(get_db),
+    as_portal_session: str | None = Cookie(default=None, alias=SESSION_COOKIE),
+    x_admin_key: str | None = Header(default=None, alias="X-Admin-Key"),
+) -> User | None:
+    """Allow admin session cookie, or optional legacy ADMIN_API_KEY header."""
+    token = as_portal_session or request.cookies.get(SESSION_COOKIE)
+    user = get_user_by_session(db, token)
+    if user is not None:
+        apply_access_policy(user, db)
+        db.commit()
+        if user_is_admin(user) and user.access_status != "SUSPENDED":
+            return user
+
+    expected = os.environ.get("ADMIN_API_KEY", "")
+    if (
+        expected
+        and x_admin_key
+        and len(x_admin_key) == len(expected)
+        and hmac.compare_digest(x_admin_key, expected)
+    ):
+        return None
+
+    if user is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "ADMIN_REQUIRED", "message": "Admin access required."},
+        )
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail={
+            "code": "ADMIN_REQUIRED",
+            "message": "Sign in with an admin account to continue.",
+        },
+    )

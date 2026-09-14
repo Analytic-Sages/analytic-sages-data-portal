@@ -12,7 +12,8 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false)
 
   if (state === 'approved') {
-    return <Navigate to={params.get('next') || '/query'} replace />
+    const next = params.get('next') || '/query'
+    return <Navigate to={next} replace />
   }
   if (state === 'pending') {
     return <Navigate to="/early-access" replace />
@@ -24,8 +25,11 @@ export function LoginPage() {
     setError(null)
     try {
       const user = await login(email, password)
-      if (user.can_run_queries) {
-        navigate(params.get('next') || '/query')
+      const next = params.get('next')
+      if (user.is_admin && next) {
+        navigate(next)
+      } else if (user.can_run_queries) {
+        navigate(next || '/query')
       } else {
         navigate('/early-access')
       }

@@ -11,12 +11,26 @@ export type AuthUser = {
   email_verified: boolean
   access_status: AccessStatus
   is_tester: boolean
+  is_admin?: boolean
   can_run_queries: boolean
   created_at?: string | null
   approved_at?: string | null
 }
 
 export type AuthState = 'loading' | 'anonymous' | 'pending' | 'approved' | 'suspended'
+
+export type AdminInvite = {
+  id: string
+  email: string
+  status: 'PENDING' | 'ACCEPTED' | 'REVOKED'
+  note: string
+  invited_by: string
+  created_at?: string | null
+  expires_at?: string | null
+  accepted_at?: string | null
+  accepted_user_id?: string | null
+  invite_url?: string
+}
 
 export type AdminAnalyticsSummary = {
   generated_at: string

@@ -21,6 +21,20 @@ def send_verification_email(email: str, token: str) -> None:
     )
 
 
+def send_invite_email(email: str, token: str) -> None:
+    link = f"{frontend_origin()}/signup?invite={token}"
+    _send(
+        email,
+        "You're invited to Analytic Sages Data Portal",
+        (
+            "You've been invited to the Analytic Sages Data Portal.\n\n"
+            "Create your account with this email to unlock Query Studio:\n\n"
+            f"{link}\n\n"
+            "If you already have an account, sign in with this email and your access will unlock.\n"
+        ),
+    )
+
+
 def send_approval_email(email: str) -> None:
     link = f"{frontend_origin()}/query"
     _send(

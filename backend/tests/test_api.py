@@ -16,6 +16,7 @@ os.close(_fd)
 os.environ["DATABASE_URL"] = f"sqlite:///{_auth_db}"
 os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")
 os.environ.setdefault("APPROVED_TESTER_EMAILS", "approved.tester@example.com")
+os.environ.setdefault("ADMIN_EMAILS", "admin@example.com")
 # Keep waitlist tests explicit; private mode is on by default in app code.
 os.environ["PRIVATE_ACCESS_MODE"] = "0"
 
@@ -23,7 +24,7 @@ from app.cache import cache
 from app.config import get_settings
 from app.db import SessionLocal, init_db
 from app.main import app
-from app.models import EmailToken, SessionToken, User
+from app.models import EmailToken, Invite, QueryEvent, SessionToken, User
 
 
 @pytest.fixture(autouse=True)
@@ -39,6 +40,8 @@ def _reset():
     try:
         db.query(SessionToken).delete()
         db.query(EmailToken).delete()
+        db.query(QueryEvent).delete()
+        db.query(Invite).delete()
         db.query(User).delete()
         db.commit()
     finally:
@@ -71,6 +74,14 @@ def _approve(user_id: str):
         f"/admin/users/{user_id}/approve",
         headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
     )
+
+
+def _admin_login(email: str = "admin@example.com", password: str = "password123"):
+    res = _signup(email, password=password)
+    assert res.status_code == 200
+    assert res.json()["user"]["is_admin"] is True
+    assert res.json()["user"]["can_run_queries"] is True
+    return client
 
 
 def _approved_client(email: str = "learner@example.com"):
@@ -353,6 +364,22 @@ def test_private_access_mode_skips_waitlist(monkeypatch):
     assert body["queries"]["total"] >= 1
 
 
+def test_admin_session_access_without_api_key():
+    client.cookies.clear()
+    denied = client.get("/admin/analytics/summary")
+    assert denied.status_code == 401
+
+    _signup("learner.notadmin@example.com")
+    forbidden = client.get("/admin/analytics/summary")
+    assert forbidden.status_code == 403
+    client.cookies.clear()
+
+    _admin_login()
+    ok = client.get("/admin/analytics/summary")
+    assert ok.status_code == 200
+    assert ok.json()["users"]["total"] >= 1
+
+
 def test_admin_policy_update(monkeypatch, tmp_path):
     monkeypatch.setenv("ADMIN_API_KEY", "admin-secret")
     monkeypatch.setenv("QUERY_POLICY_PATH", str(tmp_path / "policy.json"))
@@ -408,6 +435,8 @@ def test_learning_journey():
 
 def test_studio_visualization_and_dashboard(monkeypatch, tmp_path):
     monkeypatch.setenv("STUDIO_STORE_PATH", str(tmp_path / "studio.json"))
+    client.cookies.clear()
+    _approved_client("studio.owner@example.com")
     viz = client.post(
         "/studio/visualizations",
         json={
@@ -421,6 +450,7 @@ def test_studio_visualization_and_dashboard(monkeypatch, tmp_path):
     )
     assert viz.status_code == 200
     assert viz.json()["visualization"]["style"]["primary"] == "#E11D48"
+    assert viz.json()["visualization"]["owner_user_id"]
     viz_id = viz.json()["visualization"]["id"]
     board = client.post(
         "/studio/dashboards",
@@ -429,6 +459,7 @@ def test_studio_visualization_and_dashboard(monkeypatch, tmp_path):
     assert board.status_code == 200
     slug = board.json()["dashboard"]["slug"]
     assert board.json()["dashboard"]["layout"]
+    assert board.json()["dashboard"]["owner_user_id"]
     detail = client.get(f"/studio/dashboards/{slug}")
     assert detail.status_code == 200
     assert len(detail.json()["visualizations"]) == 1
@@ -473,6 +504,35 @@ def test_studio_visualization_and_dashboard(monkeypatch, tmp_path):
 
     client.post(f"/studio/dashboards/{slug}/share", json={"enabled": False})
     assert client.get(f"/public/dashboards/{token}").status_code == 404
+
+
+def test_studio_dashboards_are_per_user(monkeypatch, tmp_path):
+    monkeypatch.setenv("STUDIO_STORE_PATH", str(tmp_path / "studio-owners.json"))
+    client.cookies.clear()
+    _approved_client("owner.a@example.com")
+    created = client.post(
+        "/studio/dashboards",
+        json={"title": "Owner A board"},
+    )
+    assert created.status_code == 200
+    slug = created.json()["dashboard"]["slug"]
+
+    client.cookies.clear()
+    _approved_client("owner.b@example.com")
+    listed = client.get("/studio/dashboards")
+    assert listed.status_code == 200
+    assert all(d["slug"] != slug for d in listed.json()["dashboards"])
+    assert client.get(f"/studio/dashboards/{slug}").status_code == 404
+    assert client.delete(f"/studio/dashboards/{slug}").status_code == 404
+
+    # Owner A can still delete their own board
+    client.cookies.clear()
+    client.post(
+        "/auth/login",
+        json={"email": "owner.a@example.com", "password": "password123"},
+    )
+    assert client.delete(f"/studio/dashboards/{slug}").status_code == 200
+    assert client.get("/studio/dashboards").json()["dashboards"] == []
 
 
 def test_admin_dashboards(monkeypatch, tmp_path):
@@ -559,3 +619,78 @@ def test_rows_to_payload_prefers_result_schema():
     columns, data = _rows_to_payload(Result(), Job())
     assert columns == ["mint", "amount"]
     assert data == [{"mint": "abc", "amount": 1.5}]
+
+
+def test_admin_invite_grants_access_on_signup():
+    created = client.post(
+        "/admin/invites",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+        json={"email": "invited.user@example.com", "note": "cohort A"},
+    )
+    assert created.status_code == 200
+    body = created.json()
+    assert body["existing_user_approved"] is False
+    assert "invite=" in body["invite_url"]
+    token = body["invite_url"].split("invite=")[-1]
+
+    peek = client.get(f"/auth/invite/{token}")
+    assert peek.status_code == 200
+    assert peek.json()["email"] == "invited.user@example.com"
+
+    res = _signup("invited.user@example.com", invite_token=token)
+    assert res.status_code == 200
+    user = res.json()["user"]
+    assert user["access_status"] == "APPROVED"
+    assert user["email_verified"] is True
+    assert user["can_run_queries"] is True
+    assert user["approved_at"] is not None
+
+    listed = client.get(
+        "/admin/invites",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+    )
+    assert listed.status_code == 200
+    invites = listed.json()["invites"]
+    assert any(i["email"] == "invited.user@example.com" and i["status"] == "ACCEPTED" for i in invites)
+
+
+def test_admin_invite_approves_existing_waitlisted_user():
+    res = _signup("waitlisted@example.com")
+    assert res.status_code == 200
+    assert res.json()["user"]["access_status"] == "WAITLIST_PENDING"
+    user_id = res.json()["user"]["id"]
+
+    invited = client.post(
+        "/admin/invites",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+        json={"email": "waitlisted@example.com"},
+    )
+    assert invited.status_code == 200
+    assert invited.json()["existing_user_approved"] is True
+    assert invited.json()["user"]["access_status"] == "APPROVED"
+    assert invited.json()["user"]["id"] == user_id
+
+
+def test_invite_email_mismatch_rejected():
+    created = client.post(
+        "/admin/invites",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+        json={"email": "only.this@example.com"},
+    )
+    token = created.json()["invite_url"].split("invite=")[-1]
+    bad = _signup("other@example.com", invite_token=token)
+    assert bad.status_code == 400
+    assert bad.json()["detail"]["code"] == "INVITE_EMAIL_MISMATCH"
+
+
+def test_pending_invite_unlocks_on_login_without_token():
+    created = client.post(
+        "/admin/invites",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+        json={"email": "later.login@example.com"},
+    )
+    assert created.status_code == 200
+    # Sign up without using the invite link — matching email still consumes invite.
+    res = _signup("later.login@example.com")
+    assert res.status_code == 200
+    assert res.json()["user"]["can_run_queries"] is True

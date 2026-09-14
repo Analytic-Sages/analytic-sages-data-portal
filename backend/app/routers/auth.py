@@ -24,6 +24,7 @@ from app.auth_users import (
 )
 from app.db import get_db
 from app.emailer import send_password_reset_email, send_verification_email
+from app.invites import find_invite_by_token, is_invite_active
 from app.models import EmailToken, SessionToken, User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -37,6 +38,7 @@ class SignupBody(BaseModel):
     phone_country_code: str = Field(min_length=1, max_length=8)
     phone_number: str = Field(min_length=4, max_length=32)
     country_of_residence: str = Field(min_length=2, max_length=2)
+    invite_token: str | None = Field(default=None, max_length=200)
 
 
 class LoginBody(BaseModel):
@@ -65,6 +67,17 @@ def auth_config() -> dict:
     }
 
 
+@router.get("/invite/{token}")
+def peek_invite(token: str, db: Session = Depends(get_db)) -> dict:
+    invite = find_invite_by_token(db, token)
+    if invite is None or not is_invite_active(invite):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_INVITE", "message": "Invite link is invalid or expired."},
+        )
+    return {"email": invite.email, "expires_at": invite.expires_at.isoformat() if invite.expires_at else None}
+
+
 @router.post("/signup")
 def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) -> dict:
     email = body.email.strip().lower()
@@ -89,16 +102,32 @@ def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) 
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "INVALID_COUNTRY", "message": "Select a valid country of residence."},
         )
-    user = create_user(
-        db,
-        email=email,
-        password=body.password,
-        first_name=body.first_name,
-        last_name=body.last_name,
-        phone_country_code=code,
-        phone_number=phone_digits,
-        country_of_residence=country,
-    )
+    try:
+        user = create_user(
+            db,
+            email=email,
+            password=body.password,
+            first_name=body.first_name,
+            last_name=body.last_name,
+            phone_country_code=code,
+            phone_number=phone_digits,
+            country_of_residence=country,
+            invite_token=body.invite_token.strip() if body.invite_token else None,
+        )
+    except ValueError as exc:
+        code_err = str(exc)
+        if code_err == "INVITE_EMAIL_MISMATCH":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "INVITE_EMAIL_MISMATCH",
+                    "message": "Sign up with the email address this invite was sent to.",
+                },
+            ) from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_INVITE", "message": "Invite link is invalid or expired."},
+        ) from exc
     if not user.email_verified:
         raw = create_email_token(db, user, "verify", hours=48)
         send_verification_email(user.email, raw)
@@ -116,7 +145,7 @@ def login(body: LoginBody, response: Response, db: Session = Depends(get_db)) ->
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_CREDENTIALS", "message": "Invalid email or password."},
         )
-    apply_access_policy(user)
+    apply_access_policy(user, db)
     db.commit()
     db.refresh(user)
     raw_session = create_session(db, user)
@@ -143,7 +172,7 @@ def logout(
 def me(db: Session = Depends(get_db), user: User | None = Depends(get_optional_user)) -> dict:
     if user is None:
         return {"user": None}
-    apply_access_policy(user)
+    apply_access_policy(user, db)
     db.commit()
     db.refresh(user)
     return {"user": user.to_public_dict()}
@@ -177,7 +206,7 @@ def verify_email(body: TokenBody, db: Session = Depends(get_db)) -> dict:
         raise HTTPException(status_code=400, detail={"code": "INVALID_TOKEN", "message": "Invalid token."})
     user.email_verified = True
     row.used_at = datetime.now(timezone.utc)
-    apply_access_policy(user)
+    apply_access_policy(user, db)
     db.commit()
     db.refresh(user)
     return {"user": user.to_public_dict()}

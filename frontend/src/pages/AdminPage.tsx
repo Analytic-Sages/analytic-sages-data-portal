@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { api, ApiError } from '../api'
-import type { AdminAnalyticsSummary, AuthUser } from '../types/auth'
-
-const ADMIN_KEY_STORAGE = 'as_admin_api_key'
+import { useAuth } from '../auth/AuthContext'
+import type { AdminAnalyticsSummary, AdminInvite, AuthUser } from '../types/auth'
 
 function formatBytes(n: number) {
   if (n < 1024) return `${n} B`
@@ -35,91 +34,138 @@ function MiniBars({
 }
 
 export function AdminPage() {
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(ADMIN_KEY_STORAGE) || '')
-  const [keyInput, setKeyInput] = useState('')
-  const [unlocked, setUnlocked] = useState(Boolean(sessionStorage.getItem(ADMIN_KEY_STORAGE)))
+  const { user, loading: authLoading, logout } = useAuth()
   const [summary, setSummary] = useState<AdminAnalyticsSummary | null>(null)
   const [users, setUsers] = useState<AuthUser[]>([])
+  const [invites, setInvites] = useState<AdminInvite[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteNote, setInviteNote] = useState('')
+  const [lastInviteUrl, setLastInviteUrl] = useState<string | null>(null)
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const load = useCallback(
-    async (key: string) => {
-      setBusy(true)
-      setError(null)
-      try {
-        const [analytics, userRes] = await Promise.all([
-          api.adminAnalytics(key, 30),
-          api.adminUsers(key, {
-            access_status: statusFilter || undefined,
-            q: search.trim() || undefined,
-          }),
-        ])
-        setSummary(analytics)
-        setUsers(userRes.users)
-        setUnlocked(true)
-        sessionStorage.setItem(ADMIN_KEY_STORAGE, key)
-        setAdminKey(key)
-      } catch (err) {
-        setUnlocked(false)
-        sessionStorage.removeItem(ADMIN_KEY_STORAGE)
-        setSummary(null)
-        setUsers([])
-        setError(err instanceof ApiError ? err.message : 'Could not load admin data')
-      } finally {
-        setBusy(false)
-      }
-    },
-    [search, statusFilter],
-  )
+  const isAdmin = Boolean(user?.is_admin)
+
+  const load = useCallback(async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const [analytics, userRes, inviteRes] = await Promise.all([
+        api.adminAnalytics(30),
+        api.adminUsers({
+          access_status: statusFilter || undefined,
+          q: search.trim() || undefined,
+        }),
+        api.adminInvites(),
+      ])
+      setSummary(analytics)
+      setUsers(userRes.users)
+      setInvites(inviteRes.invites)
+    } catch (err) {
+      setSummary(null)
+      setUsers([])
+      setInvites([])
+      setError(err instanceof ApiError ? err.message : 'Could not load admin data')
+    } finally {
+      setBusy(false)
+    }
+  }, [search, statusFilter])
 
   useEffect(() => {
-    if (adminKey && unlocked) void load(adminKey)
-  }, [adminKey, unlocked, load])
-
-  async function onUnlock(e: FormEvent) {
-    e.preventDefault()
-    await load(keyInput.trim())
-  }
+    if (isAdmin) void load()
+  }, [isAdmin, load])
 
   async function approve(id: string) {
-    if (!adminKey) return
-    await api.adminApproveUser(adminKey, id)
-    await load(adminKey)
+    await api.adminApproveUser(id)
+    await load()
   }
 
   async function suspend(id: string) {
-    if (!adminKey) return
-    await api.adminSuspendUser(adminKey, id)
-    await load(adminKey)
+    await api.adminSuspendUser(id)
+    await load()
+  }
+
+  async function onInvite(e: FormEvent) {
+    e.preventDefault()
+    if (!inviteEmail.trim()) return
+    setBusy(true)
+    setInviteMessage(null)
+    setLastInviteUrl(null)
+    setError(null)
+    try {
+      const res = await api.adminCreateInvite({
+        email: inviteEmail.trim(),
+        note: inviteNote.trim() || undefined,
+      })
+      setInviteEmail('')
+      setInviteNote('')
+      setLastInviteUrl(res.invite_url)
+      setInviteMessage(
+        res.existing_user_approved
+          ? `Approved existing account for ${res.invite.email}.`
+          : `Invite created for ${res.invite.email}. Share the link below (also logged by the API emailer).`,
+      )
+      await load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not create invite')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function revokeInvite(id: string) {
+    await api.adminRevokeInvite(id)
+    await load()
+  }
+
+  async function resendInvite(id: string) {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await api.adminResendInvite(id)
+      setLastInviteUrl(res.invite_url)
+      setInviteMessage(
+        res.existing_user_approved
+          ? 'User already had an account — access granted.'
+          : 'Fresh invite sent. Copy the link below if email delivery is log-only.',
+      )
+      await load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not resend invite')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const signupSlice = useMemo(() => summary?.users.signups_by_day.slice(-14) ?? [], [summary])
   const querySlice = useMemo(() => summary?.queries.by_day.slice(-14) ?? [], [summary])
 
-  if (!unlocked) {
+  if (authLoading) {
     return (
       <main className="shell page auth-page">
         <h1>Admin dashboard</h1>
-        <p className="lede">Enter the server ADMIN_API_KEY to view portal analytics and manage users.</p>
-        <form className="auth-form" onSubmit={onUnlock}>
-          <label>
-            Admin API key
-            <input
-              type="password"
-              value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)}
-              autoComplete="off"
-              required
-            />
-          </label>
-          {error && <p className="error">{error}</p>}
-          <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Checking…' : 'Unlock admin'}
-          </button>
-        </form>
+        <p className="lede">Checking your session…</p>
+      </main>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/login?next=/admin" replace />
+  }
+
+  if (!isAdmin) {
+    return (
+      <main className="shell page auth-page">
+        <h1>Admin dashboard</h1>
+        <p className="lede">
+          Signed in as <strong>{user.email}</strong>, but this account is not an admin.
+        </p>
+        <p className="muted-text">
+          Ask an operator to add your email to <code>ADMIN_EMAILS</code> on the API, then sign in again.
+        </p>
         <p className="muted-text">
           <Link to="/">Back to portal</Link>
         </p>
@@ -134,27 +180,122 @@ export function AdminPage() {
           <Link to="/">Home</Link> / Admin
         </p>
         <h1>Admin dashboard</h1>
-        <p>User growth, query usage, and access management for the Data Portal.</p>
+        <p>
+          Signed in as {user.email}. User growth, query usage, and access management for the Data
+          Portal.
+        </p>
         <div className="cta-row page-actions">
-          <button type="button" className="btn btn-ghost" onClick={() => void load(adminKey)} disabled={busy}>
+          <button type="button" className="btn btn-ghost" onClick={() => void load()} disabled={busy}>
             Refresh
           </button>
           <button
             type="button"
             className="btn btn-ghost"
             onClick={() => {
-              sessionStorage.removeItem(ADMIN_KEY_STORAGE)
-              setUnlocked(false)
-              setAdminKey('')
-              setSummary(null)
+              void logout()
             }}
           >
-            Lock admin
+            Sign out
           </button>
         </div>
       </div>
 
       {error && <p className="error">{error}</p>}
+
+      <section className="panel">
+        <div className="panel-head-row">
+          <h2>Invite testers</h2>
+        </div>
+        <p className="muted-text">
+          Add an email to grant Query Studio access. If they already signed up, they are approved
+          immediately. Otherwise they get a signup invite link.
+        </p>
+        <form className="admin-invite-form" onSubmit={(e) => void onInvite(e)}>
+          <label>
+            Email
+            <input
+              type="email"
+              className="text-input"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="tester@example.com"
+              required
+            />
+          </label>
+          <label>
+            Note (optional)
+            <input
+              className="text-input"
+              value={inviteNote}
+              onChange={(e) => setInviteNote(e.target.value)}
+              placeholder="Cohort, reason…"
+            />
+          </label>
+          <button type="submit" className="btn btn-primary" disabled={busy}>
+            {busy ? 'Sending…' : 'Send invite'}
+          </button>
+        </form>
+        {inviteMessage && <p className="success-text">{inviteMessage}</p>}
+        {lastInviteUrl && (
+          <p className="admin-invite-url">
+            <span className="muted-text">Invite link:</span>{' '}
+            <a href={lastInviteUrl}>{lastInviteUrl}</a>
+          </p>
+        )}
+        <div className="data-table-wrap" style={{ marginTop: '1rem' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Note</th>
+                <th>Expires</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invites.map((inv) => (
+                <tr key={inv.id}>
+                  <td>{inv.email}</td>
+                  <td>
+                    <span className="chip">{inv.status}</span>
+                  </td>
+                  <td>{inv.note || '—'}</td>
+                  <td>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}</td>
+                  <td>
+                    <div className="cta-row">
+                      {inv.status === 'PENDING' && (
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={() => void resendInvite(inv.id)}
+                          >
+                            Resend
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-danger-text"
+                            onClick={() => void revokeInvite(inv.id)}
+                          >
+                            Revoke
+                          </button>
+                        </>
+                      )}
+                      {inv.status !== 'PENDING' && <span className="muted-text">—</span>}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {invites.length === 0 && (
+                <tr>
+                  <td colSpan={5}>No invites yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {summary && (
         <>
@@ -235,7 +376,7 @@ export function AdminPage() {
               <option value="WAITLIST_PENDING">Pending</option>
               <option value="SUSPENDED">Suspended</option>
             </select>
-            <button type="button" className="btn btn-ghost" onClick={() => void load(adminKey)}>
+            <button type="button" className="btn btn-ghost" onClick={() => void load()}>
               Apply
             </button>
           </div>
@@ -279,7 +420,11 @@ export function AdminPage() {
                         </button>
                       )}
                       {u.access_status !== 'SUSPENDED' && (
-                        <button type="button" className="btn btn-ghost btn-danger-text" onClick={() => void suspend(u.id)}>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-danger-text"
+                          onClick={() => void suspend(u.id)}
+                        >
                           Suspend
                         </button>
                       )}

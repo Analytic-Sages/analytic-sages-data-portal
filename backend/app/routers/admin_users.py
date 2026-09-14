@@ -9,10 +9,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.auth_users import require_admin
 from app.db import get_db
 from app.emailer import send_approval_email
 from app.models import ACCESS_APPROVED, ACCESS_SUSPENDED, ACCESS_WAITLIST_PENDING, User
-from app.routers.query import require_admin
 
 router = APIRouter(prefix="/admin/users", tags=["admin-users"], dependencies=[Depends(require_admin)])
 

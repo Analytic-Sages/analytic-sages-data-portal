@@ -1,11 +1,14 @@
-import { useMemo, useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { accessErrorMessage, useAuth } from '../auth/AuthContext'
+import { api } from '../api'
 import { COUNTRIES } from '../data/countries'
 
 export function SignupPage() {
   const { signup, state } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const inviteToken = params.get('invite')?.trim() || ''
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -15,11 +18,35 @@ export function SignupPage() {
   const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [inviteLocked, setInviteLocked] = useState(false)
+  const [inviteHint, setInviteHint] = useState<string | null>(null)
 
   const residenceCountry = useMemo(
     () => COUNTRIES.find((c) => c.code === residence) ?? COUNTRIES[0],
     [residence],
   )
+
+  useEffect(() => {
+    if (!inviteToken) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const invite = await api.peekInvite(inviteToken)
+        if (cancelled) return
+        setEmail(invite.email)
+        setInviteLocked(true)
+        setInviteHint('This invite unlocks Query Studio for your account.')
+      } catch {
+        if (!cancelled) {
+          setInviteHint(null)
+          setError('Invite link is invalid or expired. You can still join the waitlist.')
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [inviteToken])
 
   if (state === 'approved') {
     return <Navigate to="/query" replace />
@@ -44,6 +71,7 @@ export function SignupPage() {
         phone_country_code: dialCode,
         phone_number: phone,
         country_of_residence: residenceCountry.code === 'XX' ? 'XX' : residence,
+        invite_token: inviteToken || undefined,
       })
       navigate(user.can_run_queries ? '/query' : '/early-access')
     } catch (err) {
@@ -57,7 +85,9 @@ export function SignupPage() {
     <main className="shell page auth-page">
       <h1>Create account</h1>
       <p className="lede">
-        Sign up to use Query Studio. This portal is private: you need an account to run SQL.
+        {inviteHint
+          ? inviteHint
+          : 'Sign up to use Query Studio. This portal is private: you need an account to run SQL.'}
       </p>
       <form className="auth-form" onSubmit={onSubmit}>
         <div className="auth-name-row">
@@ -78,6 +108,7 @@ export function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            readOnly={inviteLocked}
           />
         </label>
         <label>
@@ -132,7 +163,7 @@ export function SignupPage() {
         </label>
         {error && <p className="error">{error}</p>}
         <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? 'Creating account…' : 'Create account'}
+          {busy ? 'Creating account…' : inviteToken ? 'Accept invite' : 'Create account'}
         </button>
       </form>
       <p className="muted-text">

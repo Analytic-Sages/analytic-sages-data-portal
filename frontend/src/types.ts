@@ -157,6 +157,7 @@ export type StudioVisualization = {
   x_axis: string | null
   y_axis: string | null
   description: string
+  owner_user_id?: string
   style?: {
     primary: string
     secondary: string
@@ -198,6 +199,7 @@ export type StudioDashboard = {
   share_enabled: boolean
   share_token?: string | null
   share_path?: string | null
+  owner_user_id?: string
   created_at: string
   updated_at: string
 }

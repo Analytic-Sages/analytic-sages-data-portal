@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.auth import require_key
+from app.auth_users import require_admin
 from app.dashboards import (
     get_dashboard,
     learning_journey,
     load_dashboards,
     replace_dashboards_from_dicts,
 )
-from app.routers.query import require_admin
 
 router = APIRouter(tags=["dashboards"])
 

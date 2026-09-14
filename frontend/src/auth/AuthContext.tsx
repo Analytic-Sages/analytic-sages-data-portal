@@ -28,6 +28,7 @@ type AuthContextValue = {
     phone_country_code: string
     phone_number: string
     country_of_residence: string
+    invite_token?: string
   }) => Promise<AuthUser>
   logout: () => Promise<void>
   verifyEmail: (token: string) => Promise<AuthUser>
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone_country_code: string
       phone_number: string
       country_of_residence: string
+      invite_token?: string
     }) => {
       const res = await api.signup(input)
       setUser(res.user)
