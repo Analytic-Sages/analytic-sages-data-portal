@@ -138,36 +138,49 @@ def _update_watermark_and_delete(conn, pg_dsn: str, last_id, last_slot, exported
         deleted = cur.rowcount
         log.info("watermark updated last_id=%s last_slot=%s deleted=%s exported=%s", last_id, last_slot, deleted, len(exported_ids))
     conn.commit()
-    # VACUUM must run outside transaction block
+    # VACUUM must run outside transaction block - use separate autocommit connection
+    # psycopg3: autocommit=True kwarg, psycopg2: ISOLATION_LEVEL_AUTOCOMMIT
     try:
-        orig_autocommit = conn.autocommit
-        conn.autocommit = True
-        with conn.cursor() as cur:
-            cur.execute(f'VACUUM (ANALYZE) "{schema}"."Transfer"')
-        conn.autocommit = orig_autocommit
+        try:
+            vconn = psycopg.connect(pg_dsn, autocommit=True)
+        except Exception:
+            import psycopg2.extensions as _ext  # type: ignore
+            vconn = psycopg.connect(pg_dsn)
+            try:
+                vconn.set_isolation_level(_ext.ISOLATION_LEVEL_AUTOCOMMIT)
+            except Exception:
+                vconn.autocommit = True  # fallback
+        with vconn:
+            with vconn.cursor() as cur:
+                cur.execute(f'VACUUM (ANALYZE) "{schema}"."Transfer"')
     except Exception as e:
-        log.warning("VACUUM failed (non-fatal): %s", e)
-        try:
-            conn.rollback()
-        except Exception:
-            pass
-        try:
-            conn.autocommit = False
-        except Exception:
-            pass
+        log.debug("VACUUM skipped (non-fatal): %s", e)
 
 
 def _to_parquet_table(rows, colnames):
     """rows: list[tuple] from psycopg, colnames: list[str]"""
     if not rows:
         return None
-    # Build dict of columns for Arrow
+    # Build dict of columns for Arrow - handle Decimal/int for decimal128
+    from decimal import Decimal
     cols = {name: [] for name in colnames}
     for r in rows:
         for name, val in zip(colnames, r):
-            cols[name].append(val)
-    # Normalize types for Parquet
-    # amount/fee/slot/blockTime are bigint (Python int), keep int64; normalizedAmount float
+            if name in ("value", "fee") and val is not None:
+                # Parquet decimal128 needs Decimal, handle overflow from int64
+                try:
+                    cols[name].append(Decimal(str(val)))
+                except Exception:
+                    cols[name].append(Decimal(str(int(val))) if val is not None else None)
+            elif isinstance(val, Decimal):
+                # decimals/fee_decimals as Decimal(38,9) -> int for int32
+                try:
+                    cols[name].append(int(val) if val is not None else None)
+                except Exception:
+                    cols[name].append(int(val) if val is not None else 0)
+            else:
+                cols[name].append(val)
+    # value/fee may exceed int64 (u64 up to 2^64-1), use decimal128 to avoid OverflowError
     schema = pa.schema([
         ("id", pa.string()),
         ("block_slot", pa.int64()),
@@ -177,16 +190,15 @@ def _to_parquet_table(rows, colnames):
         ("source", pa.string()),
         ("destination", pa.string()),
         ("authority", pa.string()),
-        ("value", pa.int64()),
+        ("value", pa.decimal128(38, 0)),
         ("decimals", pa.int32()),
         ("mint", pa.string()),
         ("mint_authority", pa.string()),
-        ("fee", pa.int64()),
+        ("fee", pa.decimal128(38, 0)),
         ("fee_decimals", pa.int32()),
         ("memo", pa.string()),
         ("transfer_type", pa.string()),
     ])
-    # Convert fee None handling: keep as Python None, pyarrow will null it
     table = pa.table(cols, schema=schema)
     return table
 
