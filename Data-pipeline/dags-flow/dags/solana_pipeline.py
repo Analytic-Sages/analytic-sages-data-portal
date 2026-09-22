@@ -121,7 +121,7 @@ def solana_backfill():
             "gcloud dataproc batches submit pyspark "
             "gs://{{ params.bucket }}/code/jobs/ingestion/build_iceberg.py "
             "--project={{ params.project }} --region={{ params.region }} --version=2.1 "
-            "--py-files=gs://{{ params.bucket }}/code/jobs-lib.zip "
+            "--py-files=gs://{{ params.bucket }}/code/jobs-lib-2.zip "
             "--properties=^#^spark.jars.packages=org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.1,com.google.cloud.bigdataoss:gcs-connector:hadoop3-2.2.11,org.apache.iceberg:iceberg-gcp-bundle:1.6.1 "
             "-- --table transfers --start-date {{ dag_run.conf.get('start_date', params.start_date) }} --end-date {{ dag_run.conf.get('end_date', params.end_date) }} --bucket {{ params.bucket }} --gcs-prefix {{ params.gcs_prefix }}"
         ),
