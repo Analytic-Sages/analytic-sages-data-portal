@@ -5,6 +5,7 @@ import { accessErrorMessage, useAuth } from '../auth/AuthContext'
 import { ChartStylePicker } from './ChartStylePicker'
 import { EarlyAccessModal } from './EarlyAccessModal'
 import { ResultChart } from './ResultChart'
+import { SchemaExplorer } from './SchemaExplorer'
 import {
   CHART_TYPES,
   DEFAULT_CHART_STYLE,
@@ -63,6 +64,7 @@ export function QueryStudio({
   const [newDashboardNote, setNewDashboardNote] = useState('')
   const [showSavePanel, setShowSavePanel] = useState(false)
   const [saving, setSaving] = useState(false)
+  const sqlEditorRef = useRef<HTMLTextAreaElement | null>(null)
   const autoRanKey = useRef<string | null>(null)
   const pendingVisualize = useRef(openVisualizeTab)
 
@@ -227,6 +229,27 @@ export function QueryStudio({
     }
   }
 
+  function insertSql(value: string) {
+    const editor = sqlEditorRef.current
+    if (!editor) {
+      setSql((current) => `${current}${current ? ' ' : ''}${value}`)
+      return
+    }
+    const start = editor.selectionStart
+    const end = editor.selectionEnd
+    const before = sql.slice(0, start)
+    const after = sql.slice(end)
+    const prefix = before && !/\s$/.test(before) ? ' ' : ''
+    const suffix = after && !/^\s/.test(after) ? ' ' : ''
+    const nextSql = `${before}${prefix}${value}${suffix}${after}`
+    setSql(nextSql)
+    requestAnimationFrame(() => {
+      const cursor = start + prefix.length + value.length + suffix.length
+      editor.focus()
+      editor.setSelectionRange(cursor, cursor)
+    })
+  }
+
   return (
     <div className="query-studio">
       <EarlyAccessModal
@@ -248,6 +271,7 @@ export function QueryStudio({
           <textarea
             id="learning-sql"
             className="sql-editor"
+            ref={sqlEditorRef}
             value={sql}
             onChange={(e) => setSql(e.target.value)}
             rows={16}
@@ -313,6 +337,7 @@ export function QueryStudio({
               </div>
             </div>
           )}
+          <SchemaExplorer onInsert={insertSql} />
         </aside>
       </div>
 
