@@ -468,6 +468,187 @@ select {
   margin: 0;
 }
 
+.schema-explorer {
+  border-top: 1px solid var(--as-border);
+  padding-top: 0.9rem;
+  min-width: 0;
+}
+
+.schema-explorer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.7rem;
+}
+
+.schema-explorer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.schema-collapse {
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid var(--as-border);
+  border-radius: 6px;
+  background: var(--as-white);
+  color: var(--as-navy);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.schema-collapse:hover {
+  border-color: var(--as-orange);
+  color: var(--as-orange);
+}
+
+.schema-explorer h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--as-navy);
+}
+
+.schema-explorer p {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.schema-search {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.65rem;
+}
+
+.schema-tree {
+  max-height: 28rem;
+  overflow-y: auto;
+  margin-right: -0.35rem;
+  padding-right: 0.35rem;
+}
+
+.schema-category {
+  border-bottom: 1px solid var(--as-border);
+  padding: 0.2rem 0;
+}
+
+.schema-disclosure {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 0;
+  background: transparent;
+  color: var(--as-navy);
+  padding: 0.45rem 0.2rem;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.schema-disclosure:hover {
+  color: var(--as-orange);
+}
+
+.schema-disclosure > span:first-child {
+  width: 0.8rem;
+  color: var(--as-muted);
+}
+
+.schema-count {
+  margin-left: auto;
+  color: var(--as-muted);
+  font-size: 0.72rem;
+}
+
+.schema-table {
+  border: 0;
+  padding: 0;
+}
+
+.schema-table-toggle {
+  padding-left: 0.8rem;
+  font-size: 0.82rem;
+}
+
+.schema-table-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schema-table-body {
+  padding: 0 0 0.35rem 1.85rem;
+}
+
+.schema-insert,
+.schema-column {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--as-navy);
+  padding: 0.3rem 0.2rem;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.schema-insert:hover,
+.schema-column:hover {
+  background: var(--as-white);
+  color: var(--as-orange);
+}
+
+.schema-insert code,
+.schema-column code {
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.schema-table-insert {
+  border-bottom: 1px dashed var(--as-border);
+  margin-bottom: 0.2rem;
+}
+
+.schema-table-insert span {
+  flex: 0 0 auto;
+  color: var(--as-muted);
+  font-size: 0.68rem;
+}
+
+.schema-column > span:first-child {
+  min-width: 0;
+}
+
+.schema-column small {
+  display: block;
+  overflow: hidden;
+  color: var(--as-muted);
+  font-size: 0.67rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schema-type {
+  flex: 0 0 auto;
+  color: var(--as-orange);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.schema-empty {
+  padding: 0.5rem 0.2rem;
+}
+
 @media (max-width: 1024px) {
   .query-studio-workspace {
     grid-template-columns: 1fr;

@@ -109,7 +109,12 @@ def build_activity_marts(client, project: str, dataset: str) -> None:
 
 def seed_sample(client, project: str, dataset: str) -> None:
     """Insert a small curated sample so Lab 01 works without the lake."""
-    now = datetime.now(timezone.utc)
+    clock_row = next(iter(client.query("SELECT CURRENT_TIMESTAMP() AS current_timestamp").result()))
+    now = clock_row["current_timestamp"]
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    else:
+        now = now.astimezone(timezone.utc)
     transfers = []
     mints = [
         ("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", 6),  # USDC
