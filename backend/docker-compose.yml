@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      TRINO_HOST: ${TRINO_HOST:-host.docker.internal}
+      TRINO_PORT: ${TRINO_PORT:-8081}
+      TRINO_CATALOG: ${TRINO_CATALOG:-biglake}
+      TRINO_SOURCE_SCHEMA: ${TRINO_SOURCE_SCHEMA:-solana}
+      TRINO_MARTS_SCHEMA: ${TRINO_MARTS_SCHEMA:-solana_marts}
+      API_KEY: ${API_KEY:-}
+      USE_MOCK_DATA: ${USE_MOCK_DATA:-0}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

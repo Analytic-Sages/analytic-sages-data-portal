@@ -1,0 +1,13 @@
+{
+  "published_at": "2026-09-14T05:30:56.825773+00:00",
+  "project": "analytic-sages-data-portal",
+  "dataset": "solana_curated",
+  "source": "sample",
+  "tables": [
+    "analytic-sages-data-portal.solana_curated.token_transfers",
+    "analytic-sages-data-portal.solana_curated.transactions",
+    "analytic-sages-data-portal.solana_curated.token_activity",
+    "analytic-sages-data-portal.solana_curated.wallet_activity"
+  ],
+  "freshness_note": "Updated from Analytic Sages curated publish job"
+}

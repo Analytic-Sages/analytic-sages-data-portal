@@ -1,0 +1,21 @@
+# Python
+.venv/
+.venv-publish/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+backend/var/
+
+# Node
+node_modules/
+dist/
+*.local
+
+# Env / OS
+.env
+.DS_Store
+
+# dbt / Spark artifacts
+Data-pipeline/dbt_spark/target/
+Data-pipeline/dbt_spark/logs/
