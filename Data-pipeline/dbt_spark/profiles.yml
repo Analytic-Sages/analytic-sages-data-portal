@@ -17,13 +17,13 @@ solana_lakehouse:
       schema: solana
       threads: 4
       config:
-        spark.sql.warehouse.dir: gs://our-solana-lake-prod/warehouse
+        spark.sql.warehouse.dir: gs://build-solana-lakehouse/warehouse
         spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
         spark.sql.catalog.spark_catalog: org.apache.iceberg.spark.SparkCatalog
         spark.sql.catalog.spark_catalog.type: hadoop
-        spark.sql.catalog.spark_catalog.warehouse: gs://our-solana-lake-prod/warehouse
+        spark.sql.catalog.spark_catalog.warehouse: gs://build-solana-lakehouse/warehouse
         spark.sql.catalog.spark_catalog.io-impl: org.apache.iceberg.hadoop.HadoopFileIO
         spark.sql.catalog.iceberg: org.apache.iceberg.spark.SparkCatalog
         spark.sql.catalog.iceberg.type: hadoop
-        spark.sql.catalog.iceberg.warehouse: gs://our-solana-lake-prod/warehouse
+        spark.sql.catalog.iceberg.warehouse: gs://build-solana-lakehouse/warehouse
         spark.sql.catalog.iceberg.io-impl: org.apache.iceberg.hadoop.HadoopFileIO

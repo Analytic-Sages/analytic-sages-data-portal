@@ -14,7 +14,7 @@ except ImportError:
     HAS_GCS = False
 
 LOCAL_CHECKPOINT_DIR = os.environ.get("CHECKPOINT_DIR", "checkpoints/watermarks")
-GCS_BUCKET = os.environ.get("LAKE_BUCKET", "")
+GCS_BUCKET = os.environ.get("LAKE_BUCKET", "build-solana-lakehouse")
 GCS_PREFIX = "checkpoints/watermarks"
 
 

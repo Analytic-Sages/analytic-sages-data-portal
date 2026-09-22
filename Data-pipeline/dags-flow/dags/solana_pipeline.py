@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 PROJECT = "analytic-sages-data-portal"
 REGION = "us-central1"
-BUCKET = "our-solana-lake-prod"
+BUCKET = "build-solana-lakehouse" #our-solana-lake-prod"
 GCS_PREFIX = "indexer/transfers"  # exporter writes here
 GCS_PREFIX_BASE = "indexer"  # build_iceberg appends /{table} → indexer/transfers
 PG_DSN = "postgres://postgres:testing@envio-postgres:5432/envio-dev?options=-c%20search_path%3Dgeneral_transfer_raw"

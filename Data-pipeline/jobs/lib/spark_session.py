@@ -6,7 +6,7 @@ import os
 from pyspark.sql import SparkSession
 BQ_PROJECT = "analytic-sages-data-portal"
 BQ_DATASET = "bigquery-public-data.crypto_solana_mainnet_us"
-WAREHOUSE = "gs://our-solana-lake-prod/warehouse"
+WAREHOUSE = "gs://build-solana-lakehouse/warehouse"
 CATALOG_NAME = "iceberg"
 SCRATCH_PROJECT = "analytic-sages-data-portal"
 SCRATCH_DATASET = "spark_scratch"
