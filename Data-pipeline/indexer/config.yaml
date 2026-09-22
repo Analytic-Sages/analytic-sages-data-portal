@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=./node_modules/envio/svm.schema.json
+name: solana-general-transfer-indexer
+description: General Solana token transfer indexer (SPL Token + Token-2022, all mints)
+ecosystem: svm
+chains:
+  - id: solana
+    start_slot: 447500000 # slot, not block. Head ~448052115. Adjust via https://solana.hypersync.xyz/height
+    # end_slot: 447510000 # uncomment for finite backfill
+programs:
+  - name: SplToken
+    program_id: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+    instructions:
+      - name: transfer
+        discriminator: "0x03"
+        accounts: [source, destination, authority]
+        args:
+          - name: amount
+            type: u64
+      - name: transferChecked
+        discriminator: "0x0c"
+        accounts: [source, mint, destination, authority]
+        args:
+          - name: amount
+            type: u64
+          - name: decimals
+            type: u8
+  - name: Token2022
+    program_id: TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb
+    instructions:
+      - name: transfer
+        discriminator: "0x03"
+        accounts: [source, destination, authority]
+        args:
+          - name: amount
+            type: u64
+      - name: transferChecked
+        discriminator: "0x0c"
+        accounts: [source, mint, destination, authority]
+        args:
+          - name: amount
+            type: u64
+          - name: decimals
+            type: u8
+      - name: transferCheckedWithFee
+        discriminator: "0x1a01"
+        accounts: [source, mint, destination, authority]
+        args:
+          - name: amount
+            type: u64
+          - name: decimals
+            type: u8
+          - name: fee
+            type: u64

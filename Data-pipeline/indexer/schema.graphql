@@ -1,0 +1,18 @@
+type Transfer @entity {
+  id: ID! # required PK, slot-txIndex-path
+  block_slot: BigInt!
+  block_hash: String
+  block_timestamp: BigInt! # unix secs
+  tx_signature: String!
+  source: String!
+  destination: String!
+  authority: String
+  value: BigInt!
+  decimals: Int!
+  mint: String!
+  mint_authority: String
+  fee: BigInt
+  fee_decimals: Int
+  memo: String
+  transfer_type: String
+}

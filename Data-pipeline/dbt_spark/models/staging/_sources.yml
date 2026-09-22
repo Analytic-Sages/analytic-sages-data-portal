@@ -5,3 +5,4 @@ sources:
     schema: solana
     tables:
       - name: transfers
+      - name: tokens

@@ -7,7 +7,6 @@ renamed as (
         block_slot,
         block_hash,
         block_timestamp,
-        cast(block_timestamp as date) as block_date,
         tx_signature,
         retrieval_timestamp,
         is_nft,
@@ -17,7 +16,6 @@ renamed as (
         symbol,
         uri,
         seller_fee_basis_points,
-        creators,
         primary_sale_happened,
         is_mutable,
         _ingested_at
