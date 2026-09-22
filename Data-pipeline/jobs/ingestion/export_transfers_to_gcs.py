@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 from collections import defaultdict
 
 BATCH_SIZE_DEFAULT = int(os.environ.get("BATCH_SIZE", "50000"))
-GCS_BUCKET_DEFAULT = os.environ.get("GCS_BUCKET", "our-solana-lake-prod")
+GCS_BUCKET_DEFAULT = os.environ.get("GCS_BUCKET", "build-solana-lakehouse")
 GCS_PREFIX_DEFAULT = os.environ.get("GCS_PREFIX", "indexer/transfers")
 PG_DSN_DEFAULT = os.environ.get(
     "PG_DSN",

@@ -20,7 +20,7 @@ parser.add_argument("--table", required=True, help="transfers | tokens | transac
 parser.add_argument("--start-date", default=None, help="event tables: chunk start (also fallback label for tokens)")
 parser.add_argument("--end-date", default=None, help="event tables: chunk end")
 parser.add_argument("--snapshot-date", default=None, help="tokens only: snapshot_date= folder to load")
-parser.add_argument("--bucket", default=os.environ.get("LAKE_BUCKET", "our-solana-lake-prod"))
+parser.add_argument("--bucket", default=os.environ.get("LAKE_BUCKET", "build-solana-lakehouse"))
 parser.add_argument("--gcs-prefix", default=GCS_PREFIX_DEFAULT)
 args = parser.parse_args()
 
