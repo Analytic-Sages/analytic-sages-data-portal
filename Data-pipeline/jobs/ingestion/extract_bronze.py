@@ -11,7 +11,7 @@ import sys
 import argparse
 
 BQ_DATASET = "bigquery-public-data.crypto_solana_mainnet_us"
-LAKE_BUCKET = os.environ.get("LAKE_BUCKET", "our-solana-lake-prod")
+LAKE_BUCKET = os.environ.get("LAKE_BUCKET", "build-solana-lakehouse")
 
 parser = argparse.ArgumentParser(description="Bronze extract BQ -> GCS via EXPORT DATA")
 parser.add_argument("--table", default="token_transfers", help="token_transfers | tokens | transactions | blocks | instructions")
@@ -35,6 +35,7 @@ BQ_TABLE_MAP = {
     "instructions": "Instructions",
 }
 bq_table = BQ_TABLE_MAP.get(table, table)
+indexer = 'indexer'
 
 print(f"Bronze extract (EXPORT DATA): table={table} -> BQ {BQ_DATASET}.{bq_table} range={start_date} to {end_date} bucket={bucket} billing_project={billing_project}")
 
@@ -50,12 +51,12 @@ try:
     is_snapshot = table.lower() == "tokens"
     if is_snapshot:
         snapshot_date = args.snapshot_date or start_date
-        prefix = f"bronze/{table}/snapshot_date={snapshot_date}/"
+        prefix = f"{indexer}/{table}/snapshot_date={snapshot_date}/"
         uri = f"gs://{bucket}/{prefix}part-*.parquet"
         export_sql = f"EXPORT DATA OPTIONS(uri='{uri}', format='PARQUET', overwrite=true) AS SELECT * FROM `{BQ_DATASET}.{bq_table}`"
     else:
         # EXPORT DATA writes Parquet directly to GCS, server-side, no Spark, no responseTooLarge
-        prefix = f"bronze/{table}/dt={start_date}/"
+        prefix = f"{indexer}/{table}/dt={start_date}/"
         uri = f"gs://{bucket}/{prefix}part-*.parquet"
         export_sql = f"EXPORT DATA OPTIONS(uri='{uri}', format='PARQUET', overwrite=true) AS SELECT * FROM `{BQ_DATASET}.{bq_table}` WHERE DATE(block_timestamp) BETWEEN '{start_date}' AND '{end_date}'"
     print(f"Running: {export_sql}")

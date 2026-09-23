@@ -73,8 +73,13 @@ def table(name: str) -> str:
     mapping = {
         "token_activity": f"{s.trino_catalog}.{s.trino_marts_schema}.token_activity",
         "wallet_activity": f"{s.trino_catalog}.{s.trino_marts_schema}.wallet_activity",
+        "tokens_activities": f"{s.trino_catalog}.{s.trino_marts_schema}.tokens_activities",
+        "wallets_activities": f"{s.trino_catalog}.{s.trino_marts_schema}.wallets_activities",
         "transfers": f"{s.trino_catalog}.{s.trino_source_schema}.transfers",
         "tokens": f"{s.trino_catalog}.{s.trino_source_schema}.tokens",
+        # legacy aliases kept for backward compat
+        "token_transfers": f"{s.trino_catalog}.{s.trino_source_schema}.transfers",
+        "transactions": f"{s.trino_catalog}.{s.trino_source_schema}.transactions",
     }
     if name not in mapping:
         raise KeyError(f"Unknown table key: {name}")

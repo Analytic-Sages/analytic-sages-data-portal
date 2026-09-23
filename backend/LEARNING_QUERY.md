@@ -17,7 +17,7 @@ Learners can run SQL inside the portal against curated BigQuery tables, with har
 | `QUERY_MAX_ROWS` | `100` | Result row cap |
 | `QUERY_MAX_DAYS` | `2` | Learning data window |
 | `QUERY_ALLOWED_DATASET` | `solana_curated` | Only this dataset |
-| `QUERY_ALLOWED_TABLES` | transfers,transactions,token_activity,wallet_activity | Allow-list |
+| `QUERY_ALLOWED_TABLES` | token_transfers,transactions,token_activity,wallet_activity,transfers,wallets_activities,tokens_activities | Allow-list |
 | `ADMIN_API_KEY` | (required for admin) | Protects policy updates |
 | `QUERY_POLICY_PATH` | `backend/var/query_policy.json` | Runtime overrides |
 

@@ -34,6 +34,9 @@ class QueryPolicy:
         "transactions",
         "token_activity",
         "wallet_activity",
+        "transfers",
+        "wallets_activities",
+        "tokens_activities",
     )
     note: str = (
         "Learning sandbox only. Not a replacement for Dune or open blockchain analytics."
@@ -65,7 +68,7 @@ class QueryPolicy:
 def _from_env() -> QueryPolicy:
     tables = os.environ.get(
         "QUERY_ALLOWED_TABLES",
-        "token_transfers,transactions,token_activity,wallet_activity",
+        "token_transfers,transactions,token_activity,wallet_activity,transfers,wallets_activities,tokens_activities",
     )
     return QueryPolicy(
         enabled=os.environ.get("QUERY_ENABLED", "1").lower() in {"1", "true", "yes"},

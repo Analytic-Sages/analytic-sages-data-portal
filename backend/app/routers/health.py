@@ -33,6 +33,10 @@ def health_tables() -> dict:
     return {
         "token_activity": table("token_activity"),
         "wallet_activity": table("wallet_activity"),
+        "tokens_activities": table("tokens_activities"),
+        "wallets_activities": table("wallets_activities"),
         "transfers": table("transfers"),
         "tokens": table("tokens"),
+        "token_transfers": table("token_transfers"),
+        "transactions": table("transactions"),
     }

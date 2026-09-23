@@ -54,9 +54,14 @@ bronze_base = f"gs://{bucket}/{args.gcs_prefix}/{table}"
 
 try:
     if is_snapshot:
-        # Tokens: one full snapshot folder, no date filter, no dt= path.
+        # Tokens: snapshot at bronze/tokens or indexer/tokens (fallback)
         src_path = f"{bronze_base}/snapshot_date={snapshot_date}"
-        src = spark.read.parquet(src_path)
+        try:
+            src = spark.read.parquet(src_path)
+        except Exception:
+            alt_path = f"gs://{bucket}/bronze/{table}/snapshot_date={snapshot_date}"
+            print(f"{src_path} not found, trying {alt_path}")
+            src = spark.read.parquet(alt_path)
     else:
         # Backfill loop: handle range start_date..end_date inclusive in one Spark session
         from datetime import datetime, timedelta
@@ -119,63 +124,61 @@ try:
             for df in src_list[1:]:
                 src = src.unionByName(df, allowMissingColumns=True)
 
-        # Handle BQ column alias: Blocks has slot not block_slot
-        if "slot" in src.columns and "block_slot" not in src.columns:
-            src = src.withColumnRenamed("slot", "block_slot")
-        if "slot_index" in src.columns and "index" not in src.columns:
-            pass
+    # Handle BQ column alias: Blocks has slot not block_slot (both snapshot and event paths)
+    if "slot" in src.columns and "block_slot" not in src.columns:
+        src = src.withColumnRenamed("slot", "block_slot")
+    if "slot_index" in src.columns and "index" not in src.columns:
+        pass
 
-        # Env indexer writes block_timestamp as bigint (unix secs) and value as bigint; Iceberg expects Timestamp/Decimal
-        # Cast to match TOKEN_TRANSFERS_SCHEMA if needed (safe when source already correct type) — for single-day path
-        from pyspark.sql.types import TimestampType, DecimalType
-        if "block_timestamp" in src.columns:
-            if dict(src.dtypes)["block_timestamp"] in ("bigint", "long"):
-                src = src.withColumn("block_timestamp", F.from_unixtime(F.col("block_timestamp")).cast(TimestampType()))
-        if "value" in src.columns and dict(src.dtypes)["value"] in ("bigint", "long"):
-            src = src.withColumn("value", F.col("value").cast(DecimalType(38, 9)))
-        if "decimals" in src.columns and dict(src.dtypes)["decimals"] in ("int", "bigint", "long"):
-            src = src.withColumn("decimals", F.col("decimals").cast(DecimalType(38, 9)))
-        if "fee" in src.columns and dict(src.dtypes)["fee"] in ("bigint", "long"):
-            src = src.withColumn("fee", F.col("fee").cast(DecimalType(38, 9)))
-        if "fee_decimals" in src.columns and dict(src.dtypes)["fee_decimals"] in ("int", "bigint", "long"):
-            src = src.withColumn("fee_decimals", F.col("fee_decimals").cast(DecimalType(38, 9)))
-        # Drop PG-only id if present (not in lake schema)
-        if "id" in src.columns:
-            src = src.drop("id")
+    # Env indexer writes block_timestamp as bigint (unix secs) and value as bigint; Iceberg expects Timestamp/Decimal
+    from pyspark.sql.types import TimestampType, DecimalType
+    if "block_timestamp" in src.columns:
+        if dict(src.dtypes)["block_timestamp"] in ("bigint", "long"):
+            src = src.withColumn("block_timestamp", F.from_unixtime(F.col("block_timestamp")).cast(TimestampType()))
+    if "value" in src.columns and dict(src.dtypes)["value"] in ("bigint", "long"):
+        src = src.withColumn("value", F.col("value").cast(DecimalType(38, 9)))
+    if "decimals" in src.columns and dict(src.dtypes)["decimals"] in ("int", "bigint", "long"):
+        src = src.withColumn("decimals", F.col("decimals").cast(DecimalType(38, 9)))
+    if "fee" in src.columns and dict(src.dtypes)["fee"] in ("bigint", "long"):
+        src = src.withColumn("fee", F.col("fee").cast(DecimalType(38, 9)))
+    if "fee_decimals" in src.columns and dict(src.dtypes)["fee_decimals"] in ("int", "bigint", "long"):
+        src = src.withColumn("fee_decimals", F.col("fee_decimals").cast(DecimalType(38, 9)))
+    # Drop PG-only id if present (not in lake schema)
+    if "id" in src.columns:
+        src = src.drop("id")
 
-        src = src.withColumn("_ingested_at", F.current_timestamp())
-        row_count = src.count()
-        print(f"Bronze rows to merge (total range): {row_count}")
-        if row_count == 0:
-            print("No rows, skipping MERGE")
-            sys.exit(0)
+    src = src.withColumn("_ingested_at", F.current_timestamp())
+    row_count = src.count()
+    print(f"Bronze rows to merge (total range): {row_count}")
+    if row_count == 0:
+        print("No rows, skipping MERGE")
+        sys.exit(0)
 
-        expected_keys = MERGE_KEYS.get(table, ["block_slot"])
-        for k in expected_keys:
-            if k not in src.columns:
-                raise ValueError(f"Schema drift: expected merge key {k} not in bronze columns {src.columns}")
+    expected_keys = MERGE_KEYS.get(table, ["block_slot"])
+    for k in expected_keys:
+        if k not in src.columns:
+            raise ValueError(f"Schema drift: expected merge key {k} not in bronze columns {src.columns}")
 
-        src.createOrReplaceTempView("src_view")
-        on_clause = " AND ".join([f"t.{k} = s.{k}" for k in expected_keys])
-        target = f"{catalog}.{db}.{table}"
+    src.createOrReplaceTempView("src_view")
+    on_clause = " AND ".join([f"t.{k} = s.{k}" for k in expected_keys])
+    target = f"{catalog}.{db}.{table}"
 
-        try:
-            spark.sql(f"DESCRIBE TABLE {target}")
-            table_exists = True
-        except Exception:
-            table_exists = False
+    try:
+        spark.sql(f"DESCRIBE TABLE {target}")
+        table_exists = True
+    except Exception:
+        table_exists = False
 
-        if is_snapshot:
-            src.writeTo(target).createOrReplace()
-            print(f"Snapshot load into unpartitioned {target} complete rows={row_count}")
-        elif not table_exists:
-            print(f"Target {target} does not exist, creating with initial load partitioned by days(block_timestamp)")
-            src.writeTo(target).partitionedBy(F.days(F.col("block_timestamp"))).createOrReplace()
-            print(f"Created partitioned {target} with {row_count} rows")
-        else:
-            # Idempotent range reload: overwritePartitions handles all day partitions present in src
-            src.writeTo(target).overwritePartitions()
-            print(f"Overwrite partitions into {target} complete for range {start_date}..{end_date}")
+    if is_snapshot:
+        src.writeTo(target).createOrReplace()
+        print(f"Snapshot load into unpartitioned {target} complete rows={row_count}")
+    elif not table_exists:
+        print(f"Target {target} does not exist, creating with initial load partitioned by days(block_timestamp)")
+        src.writeTo(target).partitionedBy(F.days(F.col("block_timestamp"))).createOrReplace()
+        print(f"Created partitioned {target} with {row_count} rows")
+    else:
+        src.writeTo(target).overwritePartitions()
+        print(f"Overwrite partitions into {target} complete for range {start_date}..{end_date}")
 
     # Update watermark
     if is_snapshot:
