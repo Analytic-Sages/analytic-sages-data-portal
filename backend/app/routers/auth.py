@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth_users import (
@@ -127,6 +128,13 @@ def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "INVALID_INVITE", "message": "Invite link is invalid or expired."},
+        ) from exc
+    except IntegrityError as exc:
+        # Concurrent signup with the same email hit the unique constraint after our check.
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
         ) from exc
     if not user.email_verified:
         raw = create_email_token(db, user, "verify", hours=48)

@@ -35,7 +35,9 @@ export function SignupPage() {
         if (cancelled) return
         setEmail(invite.email)
         setInviteLocked(true)
-        setInviteHint('This invite unlocks Query Studio for your account.')
+        setInviteHint(
+          `This invite was sent for ${invite.email}. Not you? Edit the email below or ask for a new invite.`,
+        )
       } catch {
         if (!cancelled) {
           setInviteHint(null)
@@ -106,9 +108,11 @@ export function SignupPage() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              if (inviteLocked) setInviteLocked(false)
+            }}
             required
-            readOnly={inviteLocked}
           />
         </label>
         <label>

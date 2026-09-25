@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from contextlib import asynccontextmanager
+
+logger = logging.getLogger("as_portal.errors")
 
 from app.config import get_settings
 from app.db import init_db
@@ -67,6 +72,15 @@ app.include_router(dashboards.router)
 app.include_router(tokens.router)
 app.include_router(wallets.router)
 app.include_router(transfers.router)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"code": "INTERNAL_ERROR", "message": "Something went wrong. Please try again."},
+    )
 
 
 @app.get("/")
