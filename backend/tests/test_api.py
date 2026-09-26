@@ -18,7 +18,6 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_auth_db}"
 os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")
 os.environ.setdefault("APPROVED_TESTER_EMAILS", "approved.tester@example.com")
 os.environ.setdefault("ADMIN_EMAILS", "admin@example.com")
-# Keep waitlist tests explicit; private mode is on by default in app code.
 os.environ["PRIVATE_ACCESS_MODE"] = "0"
 
 from app.cache import cache
@@ -286,31 +285,14 @@ def test_query_rejects_old_date():
     assert res.status_code == 400
 
 
-def test_signup_waitlist_and_approve():
+def test_signup_is_open_and_auto_approved():
     res = _signup("wait@example.com")
     assert res.status_code == 200
     user = res.json()["user"]
-    assert user["access_status"] == "WAITLIST_PENDING"
-    assert user["can_run_queries"] is False
+    assert user["access_status"] == "APPROVED"
+    assert user["can_run_queries"] is True
     me = client.get("/auth/me")
     assert me.json()["user"]["email"] == "wait@example.com"
-
-    # Simulate email verification without leaving waitlist
-    db = SessionLocal()
-    try:
-        row = db.query(User).filter(User.email == "wait@example.com").one()
-        row.email_verified = True
-        db.commit()
-    finally:
-        db.close()
-
-    blocked = client.post(
-        "/query/run",
-        json={"sql": "SELECT 1 FROM solana_curated.token_transfers LIMIT 1"},
-    )
-    assert blocked.status_code == 403
-    assert blocked.json()["detail"]["code"] == "WAITLIST_PENDING"
-    _approve(user["id"])
     allowed = client.post(
         "/query/run",
         json={
@@ -333,8 +315,8 @@ def test_approved_tester_email_seed():
     assert user["access_status"] == "APPROVED"
 
 
-def test_private_access_mode_skips_waitlist(monkeypatch):
-    monkeypatch.setenv("PRIVATE_ACCESS_MODE", "1")
+def test_open_signup_cannot_be_disabled_by_private_access_env(monkeypatch):
+    monkeypatch.setenv("PRIVATE_ACCESS_MODE", "0")
     res = _signup("private.user@example.com")
     assert res.status_code == 200
     user = res.json()["user"]
@@ -723,10 +705,20 @@ def test_pending_invite_completes_signup_for_user_created_after_invite():
 
 
 def test_admin_invite_approves_existing_waitlisted_user():
-    res = _signup("waitlisted@example.com")
-    assert res.status_code == 200
-    assert res.json()["user"]["access_status"] == "WAITLIST_PENDING"
-    user_id = res.json()["user"]["id"]
+    user_id = str(uuid.uuid4())
+    db = SessionLocal()
+    try:
+        db.add(
+            User(
+                id=user_id,
+                email="waitlisted@example.com",
+                password_hash=hash_password("password123"),
+                access_status="WAITLIST_PENDING",
+            )
+        )
+        db.commit()
+    finally:
+        db.close()
 
     invited = client.post(
         "/admin/invites",
@@ -739,7 +731,7 @@ def test_admin_invite_approves_existing_waitlisted_user():
     assert invited.json()["user"]["id"] == user_id
 
 
-def test_invite_email_mismatch_rejected():
+def test_signup_allows_new_email_with_unusable_invite_token():
     created = client.post(
         "/admin/invites",
         headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
@@ -747,8 +739,9 @@ def test_invite_email_mismatch_rejected():
     )
     token = created.json()["invite_url"].split("invite=")[-1]
     bad = _signup("other@example.com", invite_token=token)
-    assert bad.status_code == 400
-    assert bad.json()["detail"]["code"] == "INVITE_EMAIL_MISMATCH"
+    assert bad.status_code == 200
+    assert bad.json()["user"]["email"] == "other@example.com"
+    assert bad.json()["user"]["can_run_queries"] is True
 
 
 def test_pending_invite_unlocks_on_login_without_token():

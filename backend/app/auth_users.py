@@ -67,8 +67,8 @@ def user_is_admin(user: User) -> bool:
 
 
 def private_access_mode() -> bool:
-    """When enabled, signed-in users skip the waitlist (private beta, no approval queue)."""
-    return os.environ.get("PRIVATE_ACCESS_MODE", "1").lower() in {"1", "true", "yes"}
+    """Allow self-registered accounts to use Query Studio without an invite or waitlist."""
+    return True
 
 
 def apply_tester_seed(user: User) -> None:
@@ -252,11 +252,10 @@ def create_user(
     apply_admin_seed(user)
     if invite_token:
         invite = find_invite_by_token(db, invite_token)
-        if invite is None or not is_invite_active(invite):
-            raise ValueError("INVALID_INVITE")
-        if invite.email.lower() != email_norm:
-            raise ValueError("INVITE_EMAIL_MISMATCH")
-        consume_invite_for_user(db, user, raw_token=invite_token)
+        if invite is not None and is_invite_active(invite) and invite.email.lower() == email_norm:
+            consume_invite_for_user(db, user, raw_token=invite_token)
+        else:
+            consume_invite_for_user(db, user)
     else:
         consume_invite_for_user(db, user)
     if private_access_mode() and user.access_status != "SUSPENDED":

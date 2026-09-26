@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { accessErrorMessage, useAuth } from '../auth/AuthContext'
-import { api } from '../api'
 import { COUNTRIES } from '../data/countries'
 
 export function SignupPage() {
@@ -18,37 +17,11 @@ export function SignupPage() {
   const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [inviteLocked, setInviteLocked] = useState(false)
-  const [inviteHint, setInviteHint] = useState<string | null>(null)
 
   const residenceCountry = useMemo(
     () => COUNTRIES.find((c) => c.code === residence) ?? COUNTRIES[0],
     [residence],
   )
-
-  useEffect(() => {
-    if (!inviteToken) return
-    let cancelled = false
-    void (async () => {
-      try {
-        const invite = await api.peekInvite(inviteToken)
-        if (cancelled) return
-        setEmail(invite.email)
-        setInviteLocked(true)
-        setInviteHint(
-          `This invite was sent for ${invite.email}. Not you? Edit the email below or ask for a new invite.`,
-        )
-      } catch {
-        if (!cancelled) {
-          setInviteHint(null)
-          setError('Invite link is invalid or expired. You can still join the waitlist.')
-        }
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [inviteToken])
 
   if (state === 'approved') {
     return <Navigate to="/query" replace />
@@ -86,11 +59,7 @@ export function SignupPage() {
   return (
     <main className="shell page auth-page">
       <h1>Create account</h1>
-      <p className="lede">
-        {inviteHint
-          ? inviteHint
-          : 'Sign up to use Query Studio. This portal is private: you need an account to run SQL.'}
-      </p>
+      <p className="lede">Create an account to access Query Studio.</p>
       <form className="auth-form" onSubmit={onSubmit}>
         <div className="auth-name-row">
           <label>
@@ -108,10 +77,7 @@ export function SignupPage() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              if (inviteLocked) setInviteLocked(false)
-            }}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </label>
