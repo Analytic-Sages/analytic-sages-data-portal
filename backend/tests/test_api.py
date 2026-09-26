@@ -8,6 +8,7 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import IntegrityError
 
 # Force mock mode before app import side effects.
 os.environ["USE_MOCK_DATA"] = "1"
@@ -26,6 +27,7 @@ from app.db import SessionLocal, init_db
 from app.auth_users import hash_password
 from app.main import app
 from app.models import EmailToken, Invite, QueryEvent, SessionToken, User
+from app.routers import auth as auth_router
 
 
 @pytest.fixture(autouse=True)
@@ -348,6 +350,49 @@ def test_open_signup_cannot_be_disabled_by_private_access_env(monkeypatch):
     body = analytics.json()
     assert body["users"]["total"] >= 1
     assert body["queries"]["total"] >= 1
+
+
+def test_auth_config_reports_running_release(monkeypatch):
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "0123456789abcdef")
+    response = client.get("/auth/config")
+    assert response.status_code == 200
+    assert response.json()["release"] == "0123456789ab"
+
+
+def test_forgot_password_logs_whether_account_was_found(caplog):
+    caplog.set_level("INFO", logger="as_portal.auth")
+    response = client.post("/auth/forgot-password", json={"email": "missing@example.com"})
+    assert response.status_code == 200
+    assert "password_reset_requested account_found=False" in caplog.text
+
+
+def test_signup_integrity_error_without_user_is_not_reported_as_duplicate(monkeypatch):
+    def fail_create_user(*args, **kwargs):
+        raise IntegrityError("insert", {}, Exception("unrelated constraint"))
+
+    monkeypatch.setattr(auth_router, "create_user", fail_create_user)
+    response = _signup("integrity.failure@example.com")
+    assert response.status_code == 500
+    assert response.json()["detail"]["code"] == "SIGNUP_FAILED"
+
+
+def test_signup_existing_account_without_valid_invite_remains_conflict():
+    db = SessionLocal()
+    try:
+        db.add(
+            User(
+                id=str(uuid.uuid4()),
+                email="existing.account@example.com",
+                password_hash=hash_password("original-password"),
+            )
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    response = _signup("existing.account@example.com")
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "EMAIL_IN_USE"
 
 
 def test_admin_session_access_without_api_key():

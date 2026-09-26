@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +14,7 @@ from contextlib import asynccontextmanager
 logger = logging.getLogger("as_portal.errors")
 
 from app.config import get_settings
-from app.db import init_db
+from app.db import engine, init_db
 from app.routers import (
     admin_analytics,
     admin_invites,
@@ -37,6 +38,13 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
+    logger.info(
+        "runtime_identity release=%s database_driver=%s database_host=%s database_name=%s",
+        os.environ.get("RENDER_GIT_COMMIT", os.environ.get("APP_GIT_COMMIT", "unknown"))[:12],
+        engine.url.drivername,
+        engine.url.host or "local",
+        engine.url.database or "default",
+    )
     ensure_showcase()
     yield
 

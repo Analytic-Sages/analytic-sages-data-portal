@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import logging
+import os
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
@@ -29,6 +32,11 @@ from app.invites import consume_invite_for_user, find_invite_by_token, is_invite
 from app.models import EmailToken, SessionToken, User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger("as_portal.auth")
+
+
+def _email_fingerprint(email: str) -> str:
+    return hashlib.sha256(email.encode("utf-8")).hexdigest()[:12]
 
 
 class SignupBody(BaseModel):
@@ -65,6 +73,7 @@ def auth_config() -> dict:
     return {
         "private_access_mode": private_access_mode(),
         "waitlist_enabled": not private_access_mode(),
+        "release": os.environ.get("RENDER_GIT_COMMIT", os.environ.get("APP_GIT_COMMIT", "unknown"))[:12],
     }
 
 
@@ -87,6 +96,10 @@ def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) 
         invite_token = body.invite_token.strip() if body.invite_token else None
         invite = find_invite_by_token(db, invite_token) if invite_token else None
         if invite is None or not is_invite_active(invite):
+            logger.info(
+                "signup_rejected reason=existing_user email_fingerprint=%s",
+                _email_fingerprint(email),
+            )
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
@@ -152,11 +165,25 @@ def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) 
                 detail={"code": "INVALID_INVITE", "message": "Invite link is invalid or expired."},
             ) from exc
         except IntegrityError as exc:
-            # Concurrent signup with the same email hit the unique constraint after our check.
             db.rollback()
+            concurrent_user = db.query(User).filter(User.email == email).first()
+            if concurrent_user is not None:
+                logger.info(
+                    "signup_rejected reason=concurrent_user_insert email_fingerprint=%s",
+                    _email_fingerprint(email),
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
+                ) from exc
+            logger.error(
+                "signup_integrity_error email_fingerprint=%s constraint_type=%s",
+                _email_fingerprint(email),
+                type(exc.orig).__name__,
+            )
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"code": "SIGNUP_FAILED", "message": "Account creation failed. Please try again."},
             ) from exc
     if not user.email_verified:
         raw = create_email_token(db, user, "verify", hours=48)
@@ -171,6 +198,11 @@ def login(body: LoginBody, response: Response, db: Session = Depends(get_db)) ->
     email = body.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
     if user is None or not verify_password(body.password, user.password_hash):
+        logger.info(
+            "login_rejected reason=%s email_fingerprint=%s",
+            "unknown_user" if user is None else "password_mismatch",
+            _email_fingerprint(email),
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_CREDENTIALS", "message": "Invalid email or password."},
@@ -244,7 +276,13 @@ def verify_email(body: TokenBody, db: Session = Depends(get_db)) -> dict:
 
 @router.post("/forgot-password")
 def forgot_password(body: ForgotBody, db: Session = Depends(get_db)) -> dict:
-    user = db.query(User).filter(User.email == body.email.strip().lower()).first()
+    email = body.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
+    logger.info(
+        "password_reset_requested account_found=%s email_fingerprint=%s",
+        user is not None,
+        _email_fingerprint(email),
+    )
     # Always OK to avoid email enumeration
     if user is not None:
         raw = create_email_token(db, user, "reset", hours=2)
