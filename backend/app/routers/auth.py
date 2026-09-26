@@ -25,7 +25,7 @@ from app.auth_users import (
 )
 from app.db import get_db
 from app.emailer import send_password_reset_email, send_verification_email
-from app.invites import find_invite_by_token, is_invite_active
+from app.invites import consume_invite_for_user, find_invite_by_token, is_invite_active
 from app.models import EmailToken, SessionToken, User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -84,58 +84,80 @@ def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) 
     email = body.email.strip().lower()
     existing = db.query(User).filter(User.email == email).first()
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
-        )
-    phone_digits = "".join(ch for ch in body.phone_number if ch.isdigit())
-    if len(phone_digits) < 4:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"code": "INVALID_PHONE", "message": "Enter a valid phone number."},
-        )
-    code = body.phone_country_code.strip()
-    if not code.startswith("+"):
-        code = f"+{code}"
-    country = body.country_of_residence.strip().upper()
-    if len(country) != 2 or not country.isalpha():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"code": "INVALID_COUNTRY", "message": "Select a valid country of residence."},
-        )
-    try:
-        user = create_user(
-            db,
-            email=email,
-            password=body.password,
-            first_name=body.first_name,
-            last_name=body.last_name,
-            phone_country_code=code,
-            phone_number=phone_digits,
-            country_of_residence=country,
-            invite_token=body.invite_token.strip() if body.invite_token else None,
-        )
-    except ValueError as exc:
-        code_err = str(exc)
-        if code_err == "INVITE_EMAIL_MISMATCH":
+        invite_token = body.invite_token.strip() if body.invite_token else None
+        invite = find_invite_by_token(db, invite_token) if invite_token else None
+        if invite is None or not is_invite_active(invite):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
+            )
+        if invite.email.lower() != email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
                     "code": "INVITE_EMAIL_MISMATCH",
                     "message": "Sign up with the email address this invite was sent to.",
                 },
+            )
+        if existing.access_status == "SUSPENDED":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": "ACCESS_SUSPENDED", "message": "This account is suspended."},
+            )
+        existing.password_hash = hash_password(body.password)
+        consume_invite_for_user(db, existing, raw_token=invite_token)
+        db.commit()
+        db.refresh(existing)
+        user = existing
+    else:
+        phone_digits = "".join(ch for ch in body.phone_number if ch.isdigit())
+        if len(phone_digits) < 4:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_PHONE", "message": "Enter a valid phone number."},
+            )
+        code = body.phone_country_code.strip()
+        if not code.startswith("+"):
+            code = f"+{code}"
+        country = body.country_of_residence.strip().upper()
+        if len(country) != 2 or not country.isalpha():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_COUNTRY", "message": "Select a valid country of residence."},
+            )
+        try:
+            user = create_user(
+                db,
+                email=email,
+                password=body.password,
+                first_name=body.first_name,
+                last_name=body.last_name,
+                phone_country_code=code,
+                phone_number=phone_digits,
+                country_of_residence=country,
+                invite_token=body.invite_token.strip() if body.invite_token else None,
+            )
+        except ValueError as exc:
+            code_err = str(exc)
+            if code_err == "INVITE_EMAIL_MISMATCH":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "code": "INVITE_EMAIL_MISMATCH",
+                        "message": "Sign up with the email address this invite was sent to.",
+                    },
+                ) from exc
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_INVITE", "message": "Invite link is invalid or expired."},
             ) from exc
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"code": "INVALID_INVITE", "message": "Invite link is invalid or expired."},
-        ) from exc
-    except IntegrityError as exc:
-        # Concurrent signup with the same email hit the unique constraint after our check.
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
-        ) from exc
+        except IntegrityError as exc:
+            # Concurrent signup with the same email hit the unique constraint after our check.
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"code": "EMAIL_IN_USE", "message": "An account with this email already exists."},
+            ) from exc
     if not user.email_verified:
         raw = create_email_token(db, user, "verify", hours=48)
         send_verification_email(user.email, raw)

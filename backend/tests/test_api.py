@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -23,6 +24,7 @@ os.environ["PRIVATE_ACCESS_MODE"] = "0"
 from app.cache import cache
 from app.config import get_settings
 from app.db import SessionLocal, init_db
+from app.auth_users import hash_password
 from app.main import app
 from app.models import EmailToken, Invite, QueryEvent, SessionToken, User
 
@@ -674,6 +676,50 @@ def test_admin_invite_grants_access_on_signup():
     assert listed.status_code == 200
     invites = listed.json()["invites"]
     assert any(i["email"] == "invited.user@example.com" and i["status"] == "ACCEPTED" for i in invites)
+
+
+def test_pending_invite_completes_signup_for_user_created_after_invite():
+    created = client.post(
+        "/admin/invites",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+        json={"email": "invite.recovery@example.com"},
+    )
+    assert created.status_code == 200
+    token = created.json()["invite_url"].split("invite=")[-1]
+
+    db = SessionLocal()
+    try:
+        db.add(
+            User(
+                id=str(uuid.uuid4()),
+                email="invite.recovery@example.com",
+                password_hash=hash_password("unknown-password"),
+            )
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    signup = _signup(
+        "invite.recovery@example.com",
+        password="new-password123",
+        invite_token=token,
+    )
+    assert signup.status_code == 200
+    assert signup.json()["user"]["access_status"] == "APPROVED"
+
+    login = client.post(
+        "/auth/login",
+        json={"email": "invite.recovery@example.com", "password": "new-password123"},
+    )
+    assert login.status_code == 200
+
+    db = SessionLocal()
+    try:
+        invite = db.query(Invite).filter(Invite.email == "invite.recovery@example.com").one()
+        assert invite.status == "ACCEPTED"
+    finally:
+        db.close()
 
 
 def test_admin_invite_approves_existing_waitlisted_user():
