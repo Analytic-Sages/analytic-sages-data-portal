@@ -8,6 +8,7 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
 
 # Force mock mode before app import side effects.
@@ -23,11 +24,18 @@ os.environ["PRIVATE_ACCESS_MODE"] = "0"
 
 from app.cache import cache
 from app.config import get_settings
-from app.db import SessionLocal, init_db
+from app.db import SessionLocal, engine, init_db
 from app.auth_users import hash_password
 from app.main import app
 from app.models import EmailToken, Invite, QueryEvent, SessionToken, User
 from app.routers import auth as auth_router
+
+
+@event.listens_for(engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 
 @pytest.fixture(autouse=True)

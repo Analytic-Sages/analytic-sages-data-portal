@@ -250,6 +250,8 @@ def create_user(
     )
     apply_tester_seed(user)
     apply_admin_seed(user)
+    db.add(user)
+    db.flush()
     if invite_token:
         invite = find_invite_by_token(db, invite_token)
         if invite is not None and is_invite_active(invite) and invite.email.lower() == email_norm:
@@ -265,7 +267,6 @@ def create_user(
             user.approved_at = datetime.now(timezone.utc)
         if not user.approved_by:
             user.approved_by = "PRIVATE_ACCESS_MODE"
-    db.add(user)
     db.commit()
     db.refresh(user)
     return user
