@@ -71,6 +71,11 @@ def private_access_mode() -> bool:
     return True
 
 
+def invite_only_mode() -> bool:
+    """Require a valid invite before creating or recovering an account."""
+    return os.environ.get("INVITE_ONLY_MODE", "1").lower() in {"1", "true", "yes"}
+
+
 def apply_tester_seed(user: User) -> None:
     if user.email.lower() in approved_tester_emails():
         user.is_tester = True

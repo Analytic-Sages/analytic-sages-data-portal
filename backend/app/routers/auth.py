@@ -22,6 +22,7 @@ from app.auth_users import (
     get_optional_user,
     hash_password,
     hash_token,
+    invite_only_mode,
     private_access_mode,
     set_session_cookie,
     verify_password,
@@ -73,6 +74,7 @@ def auth_config() -> dict:
     return {
         "private_access_mode": private_access_mode(),
         "waitlist_enabled": not private_access_mode(),
+        "invite_only_mode": invite_only_mode(),
         "release": os.environ.get("RENDER_GIT_COMMIT", os.environ.get("APP_GIT_COMMIT", "unknown"))[:12],
     }
 
@@ -91,9 +93,29 @@ def peek_invite(token: str, db: Session = Depends(get_db)) -> dict:
 @router.post("/signup")
 def signup(body: SignupBody, response: Response, db: Session = Depends(get_db)) -> dict:
     email = body.email.strip().lower()
+    invite_token = body.invite_token.strip() if body.invite_token else None
+    if invite_only_mode():
+        if not invite_token:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": "INVITE_REQUIRED", "message": "An active invite is required to create an account."},
+            )
+        invite = find_invite_by_token(db, invite_token)
+        if invite is None or not is_invite_active(invite):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_INVITE", "message": "Invite link is invalid or expired."},
+            )
+        if invite.email.lower() != email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "INVITE_EMAIL_MISMATCH",
+                    "message": "Sign up with the email address this invite was sent to.",
+                },
+            )
     existing = db.query(User).filter(User.email == email).first()
     if existing:
-        invite_token = body.invite_token.strip() if body.invite_token else None
         invite = find_invite_by_token(db, invite_token) if invite_token else None
         if invite is None or not is_invite_active(invite):
             logger.info(

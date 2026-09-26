@@ -1,8 +1,9 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { accessErrorMessage, useAuth } from '../auth/AuthContext'
 import { COUNTRIES } from '../data/countries'
 import { PasswordField } from '../components/PasswordField'
+import { api } from '../api'
 
 export function SignupPage() {
   const { signup, state } = useAuth()
@@ -18,11 +19,47 @@ export function SignupPage() {
   const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [inviteOnlyMode, setInviteOnlyMode] = useState(true)
+  const [inviteHint, setInviteHint] = useState('An active invite link is required to create an account.')
 
   const residenceCountry = useMemo(
     () => COUNTRIES.find((c) => c.code === residence) ?? COUNTRIES[0],
     [residence],
   )
+
+  useEffect(() => {
+    let cancelled = false
+    void api.authConfig().then((config) => {
+      if (!cancelled) {
+        setInviteOnlyMode(config.invite_only_mode)
+        if (!inviteToken && !config.invite_only_mode) {
+          setInviteHint('Create an account to access Query Studio.')
+        }
+      }
+    }).catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [inviteToken])
+
+  useEffect(() => {
+    if (!inviteToken) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const invite = await api.peekInvite(inviteToken)
+        if (!cancelled) {
+          setEmail(invite.email)
+          setInviteHint(`Invite verified for ${invite.email}.`)
+        }
+      } catch {
+        if (!cancelled) setInviteHint('This invite link is invalid or expired. Request a new invite link.')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [inviteToken])
 
   if (state === 'approved') {
     return <Navigate to="/query" replace />
@@ -60,7 +97,7 @@ export function SignupPage() {
   return (
     <main className="shell page auth-page">
       <h1>Create account</h1>
-      <p className="lede">Create an account to access Query Studio.</p>
+      <p className="lede">{inviteHint}</p>
       <form className="auth-form" onSubmit={onSubmit}>
         <div className="auth-name-row">
           <label>
@@ -130,8 +167,12 @@ export function SignupPage() {
           required
         />
         {error && <p className="error">{error}</p>}
-        <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? 'Creating account…' : inviteToken ? 'Accept invite' : 'Create account'}
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={busy || (inviteOnlyMode && !inviteToken)}
+        >
+          {busy ? 'Creating account…' : inviteOnlyMode ? 'Accept invite' : 'Create account'}
         </button>
       </form>
       <p className="muted-text">

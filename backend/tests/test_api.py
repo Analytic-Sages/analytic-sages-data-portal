@@ -21,6 +21,7 @@ os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")
 os.environ.setdefault("APPROVED_TESTER_EMAILS", "approved.tester@example.com")
 os.environ.setdefault("ADMIN_EMAILS", "admin@example.com")
 os.environ["PRIVATE_ACCESS_MODE"] = "0"
+os.environ["INVITE_ONLY_MODE"] = "0"
 
 from app.cache import cache
 from app.config import get_settings
@@ -350,6 +351,7 @@ def test_open_signup_cannot_be_disabled_by_private_access_env(monkeypatch):
     assert cfg.status_code == 200
     assert cfg.json()["private_access_mode"] is True
     assert cfg.json()["waitlist_enabled"] is False
+    assert cfg.json()["invite_only_mode"] is False
     analytics = client.get(
         "/admin/analytics/summary",
         headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
@@ -401,6 +403,23 @@ def test_signup_existing_account_without_valid_invite_remains_conflict():
     response = _signup("existing.account@example.com")
     assert response.status_code == 409
     assert response.json()["detail"]["code"] == "EMAIL_IN_USE"
+
+
+def test_signup_requires_valid_matching_invite_in_invite_only_mode(monkeypatch):
+    monkeypatch.setenv("INVITE_ONLY_MODE", "1")
+    missing = _signup("invite.required@example.com")
+    assert missing.status_code == 403
+    assert missing.json()["detail"]["code"] == "INVITE_REQUIRED"
+
+    created = client.post(
+        "/admin/invites",
+        headers={"X-Admin-Key": os.environ["ADMIN_API_KEY"]},
+        json={"email": "invite.required@example.com"},
+    )
+    token = created.json()["invite_url"].split("invite=")[-1]
+    accepted = _signup("invite.required@example.com", invite_token=token)
+    assert accepted.status_code == 200
+    assert accepted.json()["user"]["can_run_queries"] is True
 
 
 def test_admin_session_access_without_api_key():

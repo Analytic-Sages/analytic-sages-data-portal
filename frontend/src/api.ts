@@ -85,6 +85,7 @@ export const api = {
   dashboard: (slug: string) => get<DashboardDetailResponse>(`/dashboards/${slug}`),
   runQuery: (sql: string) => send<QueryResult>('/query/run', 'POST', { sql }),
   me: () => get<{ user: AuthUser | null }>('/auth/me'),
+  authConfig: () => get<{ invite_only_mode: boolean }>('/auth/config'),
   signup: (body: {
     email: string
     password: string
