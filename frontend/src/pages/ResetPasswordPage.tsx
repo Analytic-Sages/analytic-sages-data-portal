@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
 import { accessErrorMessage } from '../auth/AuthContext'
+import { PasswordField } from '../components/PasswordField'
 
 export function ResetPasswordPage() {
   const [params] = useSearchParams()
@@ -37,17 +38,14 @@ export function ResetPasswordPage() {
         </>
       ) : (
         <form className="auth-form" onSubmit={onSubmit}>
-          <label>
-            New password
-            <input
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={8}
-              required
-            />
-          </label>
+          <PasswordField
+            label="New password"
+            autoComplete="new-password"
+            value={password}
+            onChange={setPassword}
+            minLength={8}
+            required
+          />
           {error && <p className="error">{error}</p>}
           <button type="submit" className="btn btn-primary" disabled={busy || !token}>
             Update password

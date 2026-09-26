@@ -2167,6 +2167,41 @@ select {
   background: var(--as-white);
 }
 
+.password-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+
+.password-field-row input {
+  min-width: 0;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.password-visibility-toggle {
+  min-width: 4.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--as-border);
+  border-left: 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--as-surface);
+  color: var(--as-navy);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.password-visibility-toggle:hover {
+  background: var(--as-border);
+}
+
+.password-visibility-toggle:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--as-orange);
+  outline-offset: 2px;
+}
+
 .auth-name-row {
   display: grid;
   gap: 0.75rem;

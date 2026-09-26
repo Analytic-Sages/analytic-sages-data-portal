@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { accessErrorMessage, useAuth } from '../auth/AuthContext'
 import { COUNTRIES } from '../data/countries'
+import { PasswordField } from '../components/PasswordField'
 
 export function SignupPage() {
   const { signup, state } = useAuth()
@@ -120,17 +121,14 @@ export function SignupPage() {
             />
           </div>
         </label>
-        <label>
-          Password
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            minLength={8}
-            required
-          />
-        </label>
+        <PasswordField
+          label="Password"
+          autoComplete="new-password"
+          value={password}
+          onChange={setPassword}
+          minLength={8}
+          required
+        />
         {error && <p className="error">{error}</p>}
         <button type="submit" className="btn btn-primary" disabled={busy}>
           {busy ? 'Creating account…' : inviteToken ? 'Accept invite' : 'Create account'}

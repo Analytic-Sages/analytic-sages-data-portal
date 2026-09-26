@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { accessErrorMessage, useAuth } from '../auth/AuthContext'
+import { PasswordField } from '../components/PasswordField'
 
 export function LoginPage() {
   const { login, state } = useAuth()
@@ -55,16 +56,13 @@ export function LoginPage() {
             required
           />
         </label>
-        <label>
-          Password
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
+        <PasswordField
+          label="Password"
+          autoComplete="current-password"
+          value={password}
+          onChange={setPassword}
+          required
+        />
         {error && <p className="error">{error}</p>}
         <button type="submit" className="btn btn-primary" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
